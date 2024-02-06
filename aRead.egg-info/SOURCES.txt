@@ -1,0 +1,10 @@
+LICENSE.txt
+README.md
+setup.py
+aRead/__init__.py
+aRead/readAREPO.py
+aRead/readSinks.py
+aRead.egg-info/PKG-INFO
+aRead.egg-info/SOURCES.txt
+aRead.egg-info/dependency_links.txt
+aRead.egg-info/top_level.txt
