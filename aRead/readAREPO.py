@@ -50,7 +50,7 @@ class readAREPO():
         yn = self.rho / ((1 + 4 * 0.1) * mProt)
         ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
         energy = self.u * self.rho
-        self.gasTemp = 2 * energy  / (3 * ynTot * kB())
+        self.gasTemp = 2 * energy  / (3 * ynTot * kB)
 
         # Loading chemistry if desired
         if chemistry:
