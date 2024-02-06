@@ -1,5 +1,7 @@
 # Importing libraries
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
 import h5py
 
 # Constants
@@ -166,3 +168,172 @@ class readAREPO():
                     dataDict[att] = dat
         
         return dataDict 
+    
+    # Show a weighted histogram based on three variables
+    def image(self, x, y, w, log=True, cmap="plasma"):
+        # Logging the weights if required
+        if log:
+            w = np.log10(w)
+
+        # Binning the data 
+        weightedHist, xb, yb = np.histogram2d(y, x, weights=w, bins=(500, 500))
+        histNumbers, xb, yb = np.histogram2d(y, x, bins=(500, 500))
+
+        # Combining the histogrammed and non histogrammed data
+        finalHist = weightedHist/histNumbers
+        finalHist = np.ma.masked_where(histNumbers < 1, finalHist)
+
+        # Checking if we need to log the cmap and plotting
+        plt.imshow(finalHist, aspect="auto", cmap=cmap, origin="lower", extent=[yb[0], yb[-1], xb[0], xb[-1]])
+        plt.colorbar()
+
+    # Plot a temperature-density diagram
+    def tempDensity(self, cmin=0.001):
+        # Log the variables for the axes
+        nDenst = np.log10(self.numberDensity)
+        temp = np.log10(self.gasTemp)
+        weight = self.mass/1.991e33
+
+        # Calculating the normalisation
+        norm = mpl.colors.Normalize(vmin=np.min(weight), vmax=np.max(weight), clip=False)
+
+        # Make the plot
+        hist = plt.hist2d(nDenst, temp, bins=1000, cmap="jet", weights=weight, cmin=cmin, norm=norm)
+        plt.colorbar(label="Mass $\\rm [M_\odot]$")
+        plt.xlabel("Number density, $\\rm [cm^{-3}]$")
+        plt.ylabel("Temperature, $\\rm [K]$")
+
+    # Plot a radial density profile
+    def radialDensity(self):
+        # Finding the maximum density
+        maxDensity = np.max(self.rho)
+        maxIndex = np.where(self.rho == maxDensity)
+
+        # Finding the position of this 
+        xcom = self.x[maxIndex]
+        ycom = self.y[maxIndex]
+        zcom = self.z[maxIndex]
+
+        # Finding the minimum cell size to use as our min r
+        minCellSize = (self.mass[maxIndex] / self.rho[maxIndex])**(1/3)
+
+        # Getting every particle's distance from this
+        r = np.sqrt((self.x - xcom)**2 + (self.y - ycom)**2 + (self.z - zcom)**2) + minCellSize[0]
+
+        # Defining the limits of the bins
+        rMin = minCellSize[0] * 2
+        rMax = np.max(self.x) * 2
+
+        # Creating the bins
+        nBins = 50
+        logDiff = (np.log10(rMax) - np.log10(rMin)) / nBins
+
+        # Creating arrays for the binned data
+        shellDensity = np.zeros(nBins)
+        shellRadius = np.zeros(nBins)
+
+        # Looping through each bin
+        for i in range(nBins):
+            # Setting the radii for the current shell
+            rInner = 10**(np.log10(rMin) + i * logDiff)
+            rOuter = 10**(np.log10(rMin) + (i+1) * logDiff)
+
+            # Selecting cells inside this range
+            inRadius = np.where((r > rInner) & (r < rOuter))[0]
+
+            # Working out the shell's desnity
+            shellMass = np.sum(self.mass[inRadius])
+            shellVolume = (np.pi * 4 / 3) * (rOuter**3 - rInner**3)
+
+            shellDensity[i] = shellMass / shellVolume
+            shellRadius[i] = (rOuter + rInner) / 2
+
+        return shellRadius, shellDensity
+
+    # Function to check how the density spread looks
+    def checkDensity(self):
+        # Logging density
+        logRho = np.log10(self.rho)
+
+        # Creating the figure
+        plt.figure(figsize=(8,8))
+        plt.hist2d(self.x, logRho, bins=500, cmin=0.01)
+        plt.xlabel("x Position, $\\rm cm$")
+        plt.ylabel("Density, $\\rm \log{\\rho}$")
+
+    # Function to see where the gas and dust are coupling
+    def gasDustTemps(self, binNum=50):
+        # Logging number denisty
+        numDense = np.log10(self.numberDensity)
+
+        # Defining density bins
+        densityBins = np.linspace(np.min(numDense), np.max(numDense), binNum)
+
+        # Creating storage arrays
+        avgDust = np.zeros(binNum-1)
+        stdDust = np.zeros(binNum-1)
+        avgGas = np.zeros(binNum-1)
+        stdGas = np.zeros(binNum-1)
+        densityMid = np.zeros(binNum-1)
+
+        # Binning the temperature data 
+        for i in range(binNum-1):
+            # Getting our bin ranges
+            binMin = densityBins[i]
+            binMax = densityBins[i+1]
+
+            # Finding gas and temperture particles in this bin
+            ind = np.where((numDense <= binMax) & (numDense >= binMin))
+            g = self.gasTemp[ind]
+            d = self.dustTemp[ind]
+
+            # Logging
+            g = np.log10(g)
+            d = np.log10(d)
+
+            # Calculating the average and spread
+            avgGas[i] = np.mean(g)
+            stdGas[i] = np.std(g)
+            avgDust[i] = np.mean(d)
+            stdDust[i] = np.std(d)
+
+            densityMid[i] = (binMax + binMin) / 2
+
+        # Plotting the gas and dust temperatures
+        plt.errorbar(densityMid, avgGas, yerr=stdGas, fmt="g.", capsize=3, label="Gas", alpha=0.6)
+        plt.ylabel("Temperature, $\\rm K$")
+        plt.yticks([0, 1, 2, 3, 4], ["1", "10", "100", "1000", "10000"])
+        plt.errorbar(densityMid, avgDust, yerr=stdDust, fmt="b.", capsize=3, label="Dust", alpha=0.6)
+        plt.xlabel("Number Density, $\\rm {cm^{-3}}$")
+        plt.xticks([-2, 0, 2, 4, 6, 8, 10], ["0.01", "1", "100", "10000", "$\\rm 10^6$", "$\\rm 10^8$", "$\\rm 10^{10}$"] )
+        plt.legend(loc="upper right")
+
+    # Plotting the snapshot's IMF
+    def imfPlot(self, color="r", label="UV1", bins=20, density=False):
+        # Converting the mass and logging
+        mass = self.sinkMass / 1.991e33
+        logMass = np.log10(mass)
+
+        # Plotting the histogram
+        hist = plt.hist(logMass, bins=bins, histtype="step", color=color, linestyle="-", label=label, density=density)
+
+    # Find momentum 
+    def calculateMomentum(self):
+        self.momentum = np.sum(self.mass * np.sqrt(self.vx**2 + self.vy**2 + self.vz**2))
+
+        if self.nSinks > 0:
+            self.sinkMomentum = np.sum(self.sinkMass * np.sqrt(self.sinkVX**2 + self.sinkVY**2 + self.sinkVZ**2))
+            self.totalMomentum = self.momentum + self.sinkMomentum
+        else:
+            self.sinkMomentum = 0
+            self.totalMomentum = self.momentum
+
+    # Find centre of mass
+    def centreOfMass(self):
+        # Calculate the centre of mass
+        self.comX = np.sum(self.x * self.mass) / np.sum(self.mass)
+        self.comY = np.sum(self.y * self.mass) / np.sum(self.mass)
+        self.comZ = np.sum(self.z * self.mass) / np.sum(self.mass)  
+
+        # Find distances to centre of mass
+        self.rCOM = np.sqrt((self.x - self.comX)**2 + (self.y - self.comY)**2 + (self.z - self.comZ)**2)
