@@ -10,9 +10,9 @@ kB =  1.38e-16   # cgs unit
 
 # Function to open arepo data 
 class readAREPO():
-    def __init__(self, filename, chemistry=True):
+    def __init__(self, filename, chemistry=True, rates=False):
         # Loading in hdf5 file and assigninig data
-        self.dataDict = self.snapshotRead(filename)
+        self.dataDict = self.snapshotRead(filename, chemistry, rates)
 
         # The 3-D Position and Velocitiy arrays
         positions = self.dataDict["Coordinates"]
@@ -136,7 +136,7 @@ class readAREPO():
         return sinkDict
 
     # Function to read the hdf5 data and assign it to a data dictionary
-    def snapshotRead(self, filename):
+    def snapshotRead(self, filename, chemistry, rates):
         # Reading file with h5py
         snapshotFile = h5py.File(filename, "r")
 
@@ -147,7 +147,13 @@ class readAREPO():
         dataDict = {}
 
         # List of attributes to read
-        attrs = ["Coordinates", "Velocities", "Density", "Masses", "InternalEnergy", "ParticleIDs", "DustTemperature", "ChemicalAbundances", "Potential", "PotentialPeak", "Acceleration", "VelocityDivergence"]
+        attrs = ["Coordinates", "Velocities", "Density", "Masses", "InternalEnergy", "ParticleIDs", "DustTemperature", "Potential", "PotentialPeak", "Acceleration", "VelocityDivergence"]
+
+        # Extracting chemical variables if needed
+        if rates:
+            attrs.append("SGCHEM_HeatCoolRates")
+        if chemistry:
+            attrs.append("ChemicalAbundances")
 
         # Selecting part type 0 data
         data = snapshotFile["PartType0"]
@@ -161,7 +167,7 @@ class readAREPO():
                 pass
             else:
                 # If conversion factor, get it and scale
-                if att != "DustTemperature" and att != "ChemicalAbundances" and att != "PotentialPeak" and att != "Acceleration" and att != "VelocityDivergence" and att != "ParticleIDs":
+                if att != "DustTemperature" and att != "ChemicalAbundances" and att != "PotentialPeak" and att != "Acceleration" and att != "VelocityDivergence" and att != "ParticleIDs" and att !="SGCHEM_HeatCoolRates":
                     cgs = data[att].attrs.get("to_cgs")
                     dataDict[att] = np.multiply(dat, cgs)
                 else:
