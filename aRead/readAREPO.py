@@ -58,6 +58,10 @@ class readAREPO():
         if chemistry:
             self.extractChemistry()
 
+        # Loading rates if required
+        if rates:
+            self.rates = self.dataDict["SGCHEM_HeatCoolRates"]
+
     # Function to extract all the chemistry information
     def extractChemistry(self, totC=1.4e-4, totO=3.2e-4):
         # Getting the different abundances from the chemistry data
@@ -136,7 +140,7 @@ class readAREPO():
         return sinkDict
 
     # Function to read the hdf5 data and assign it to a data dictionary
-    def snapshotRead(self, filename, chemistry, rates):
+    def snapshotRead(self, filename, rates):
         # Reading file with h5py
         snapshotFile = h5py.File(filename, "r")
 
@@ -147,13 +151,11 @@ class readAREPO():
         dataDict = {}
 
         # List of attributes to read
-        attrs = ["Coordinates", "Velocities", "Density", "Masses", "InternalEnergy", "ParticleIDs", "DustTemperature", "Potential", "PotentialPeak", "Acceleration", "VelocityDivergence"]
+        attrs = ["Coordinates", "Velocities", "Density", "Masses", "InternalEnergy", "ParticleIDs", "ChemicalAbundances", "DustTemperature", "Potential", "PotentialPeak", "Acceleration", "VelocityDivergence"]
 
         # Extracting chemical variables if needed
         if rates:
             attrs.append("SGCHEM_HeatCoolRates")
-        if chemistry:
-            attrs.append("ChemicalAbundances")
 
         # Selecting part type 0 data
         data = snapshotFile["PartType0"]
