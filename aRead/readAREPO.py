@@ -61,6 +61,7 @@ class readAREPO():
         # Loading rates if required
         if rates:
             self.rates = self.dataDict["SGCHEM_HeatCoolRates"]
+            self.extractRates()
 
     # Function to extract all the chemistry information
     def extractChemistry(self, totC=1.4e-4, totO=3.2e-4):
@@ -79,6 +80,23 @@ class readAREPO():
         self.H = 1 - 2 * self.H2 - self.HI - self.CHx - self.OHx - self.HCOI
         self.C = totC - self.CI - self.CHx - self.CO - self.HCOI
         self.O = totO - self.CO - self.HCOI - self.OHx
+
+    # Function to pull out all the different heating and cooling rates
+    def extractRates(self):
+        self.gasGrain = self.rates[:,0]             # Gas-grain cooling
+        self.H2cool = self.rates[:,1]               # H2 cooling
+        self.atomicCool = self.rates[:,2]           # Atomic cooling
+        self.lymanAlpha = self.rates[:,3]           # HI electronic excitation cooling
+        self.HeIcool = self.rates[:,4]              # HeI electronic excitation cooling
+        self.bremsstrahlung = self.rates[:,5]       # Thermal bremsstrahlung
+        self.cosmicRays = self.rates[:,6]           # Cosmic Ray Heating
+        self.photoElectric = self.rates[:,7]        # Photoelectric heating
+        self.OIfineStruc = self.rates[:,8]          # OI Fine structure cooling
+        self.CIIfineStruc = self.rates[:,9]         # CII Fine structure cooling
+        self.dustRecomb = self.rates[:,10]          # Dust recombination cooling
+        self.highTfineStruc = self.rates[:,11]      # High temperature fine structure cooling (multiple)
+        self.COcool = self.rates[:,18] + self.rates[:,19] + self.rates[:,20] # CO cooling (multiple isotopes)
+        self.CIfineStruc = self.rates[:,21]         # CI Fine structure cooling
 
     # Function to read the header atrributes
     def readHeader(self, snapshotFile):
