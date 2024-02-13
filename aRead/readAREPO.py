@@ -12,7 +12,7 @@ kB =  1.38e-16   # cgs unit
 class readAREPO():
     def __init__(self, filename, chemistry=True, rates=False):
         # Loading in hdf5 file and assigninig data
-        self.dataDict = self.snapshotRead(filename, chemistry, rates)
+        self.dataDict = self.snapshotRead(filename, rates)
 
         # The 3-D Position and Velocitiy arrays
         positions = self.dataDict["Coordinates"]
