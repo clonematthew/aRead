@@ -135,6 +135,9 @@ class readSinks():
         self.sinkX = np.zeros((dumpMax, sinkMax))
         self.sinkY = np.zeros((dumpMax, sinkMax))
         self.sinkZ = np.zeros((dumpMax, sinkMax))
+        self.sinkVX = np.zeros((dumpMax, sinkMax))
+        self.sinkVY = np.zeros((dumpMax, sinkMax))
+        self.sinkVZ = np.zeros((dumpMax, sinkMax))
         self.sinkMass = np.zeros((dumpMax, sinkMax))
         self.formationMass = np.zeros((dumpMax, sinkMax))
         self.formationTime = np.zeros((dumpMax, sinkMax))
@@ -227,7 +230,7 @@ class readSinks():
                     self.allVX = self.sinkVX[:index]
                     self.allVY = self.sinkVY[:index]
                     self.allVZ = self.sinkVZ[:index]
-                    
+
                 # Otherwise, add to existing
                 else:
                     if len(self.time) == 0:
