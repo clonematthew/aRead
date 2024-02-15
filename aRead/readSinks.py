@@ -256,9 +256,9 @@ class readSinks():
                         self.allX = np.concatenate((self.allX[:startIndex], self.sinkX[:index]))
                         self.allY = np.concatenate((self.allY[:startIndex], self.sinkY[:index]))
                         self.allZ = np.concatenate((self.allZ[:startIndex], self.sinkZ[:index]))
-                        self.allVX = np.concatenate((self.allVX[:startindex], self.sinkVX[:index]))
-                        self.allVY = np.concatenate((self.allVY[:startindex], self.sinkVZ[:index]))
-                        self.allVZ = np.concatenate((self.allVZ[:startindex], self.sinkVZ[:index]))
+                        self.allVX = np.concatenate((self.allVX[:startIndex], self.sinkVX[:index]))
+                        self.allVY = np.concatenate((self.allVY[:startIndex], self.sinkVZ[:index]))
+                        self.allVZ = np.concatenate((self.allVZ[:startIndex], self.sinkVZ[:index]))
 
             # End the while loop
             self.bufferSizeError = True
