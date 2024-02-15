@@ -167,6 +167,9 @@ class readSinks():
                         self.sinkX[dumpCount, i] = sinkData[0]
                         self.sinkY[dumpCount, i] = sinkData[1]
                         self.sinkZ[dumpCount, i] = sinkData[2]
+                        self.sinkVX[dumpCount, i] = sinkData[3]
+                        self.sinkVY[dumpCount, i] = sinkData[4]
+                        self.sinkVZ[dumpCount, i] = sinkData[5]
                         self.sinkMass[dumpCount, i] = sinkData[9]
                         self.formationMass[dumpCount, i] = sinkData[10]
                         self.formationTime[dumpCount, i] = sinkData[11]
@@ -177,7 +180,6 @@ class readSinks():
 
                         sinkData = struct.unpack("iiii", f.read(4 * 4))
                         self.formationOrder[dumpCount, i] = sinkData[2]
-
 
                     # Counting up the dump counter
                     dumpCount += 1 
@@ -222,6 +224,10 @@ class readSinks():
                     self.allX = self.sinkX[:index]
                     self.allY = self.sinkY[:index]
                     self.allZ = self.sinkZ[:index]
+                    self.allVX = self.sinkVX[:index]
+                    self.allVY = self.sinkVY[:index]
+                    self.allVZ = self.sinkVZ[:index]
+                    
                 # Otherwise, add to existing
                 else:
                     if len(self.time) == 0:
@@ -247,6 +253,9 @@ class readSinks():
                         self.allX = np.concatenate((self.allX[:startIndex], self.sinkX[:index]))
                         self.allY = np.concatenate((self.allY[:startIndex], self.sinkY[:index]))
                         self.allZ = np.concatenate((self.allZ[:startIndex], self.sinkZ[:index]))
+                        self.allVX = np.concatenate((self.allVX[:startindex], self.sinkVX[:index]))
+                        self.allVY = np.concatenate((self.allVY[:startindex], self.sinkVZ[:index]))
+                        self.allVZ = np.concatenate((self.allVZ[:startindex], self.sinkVZ[:index]))
 
             # End the while loop
             self.bufferSizeError = True
@@ -262,3 +271,6 @@ class readSinks():
         self.sinkX = self.allX
         self.sinkY = self.allY
         self.sinkZ = self.allZ
+        self.sinkVX = self.allVX
+        self.sinkVY = self.allVY
+        self.sinkVZ = self.allVZ
