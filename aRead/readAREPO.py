@@ -345,10 +345,16 @@ class readAREPO():
 
     # Find momentum 
     def calculateMomentum(self):
-        self.momentum = np.sum(self.mass * np.sqrt(self.vx**2 + self.vy**2 + self.vz**2))
+        self.xMomentum = np.sum(self.mass * self.vx)
+        self.yMomentum = np.sum(self.mass * self.vy)
+        self.zMomentum = np.sum(self.mass * self.vz)
+        self.momentum = np.sqrt(self.xMomentum**2 + self.yMomentum**2 + self.zMomentum**2)
 
         if self.nSinks > 0:
-            self.sinkMomentum = np.sum(self.sinkMass * np.sqrt(self.sinkVX**2 + self.sinkVY**2 + self.sinkVZ**2))
+            self.xMomentumS = np.sum(self.mass * self.sinkVX)
+            self.yMomentumS = np.sum(self.mass * self.sinkVY)
+            self.zMomentumS = np.sum(self.mass * self.sinkVZ)
+            self.sinkMomentum = np.sqrt(self.xMomentumS**2 + self.yMomentumS**2 + self.zMomentumS**2)
             self.totalMomentum = self.momentum + self.sinkMomentum
         else:
             self.sinkMomentum = 0
