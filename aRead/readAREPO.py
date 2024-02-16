@@ -351,10 +351,12 @@ class readAREPO():
         self.momentum = np.sqrt(self.xMomentum**2 + self.yMomentum**2 + self.zMomentum**2)
 
         if self.nSinks > 0:
-            self.xMomentumS = np.sum(self.mass * self.sinkVX)
-            self.yMomentumS = np.sum(self.mass * self.sinkVY)
-            self.zMomentumS = np.sum(self.mass * self.sinkVZ)
+            self.xMomentumS = np.sum(self.sinkMass * self.sinkVX)
+            self.yMomentumS = np.sum(self.sinkMass * self.sinkVY)
+            self.zMomentumS = np.sum(self.sinkMass * self.sinkVZ)
+
             self.sinkMomentum = np.sqrt(self.xMomentumS**2 + self.yMomentumS**2 + self.zMomentumS**2)
+            
             self.totalMomentum = self.momentum + self.sinkMomentum
         else:
             self.sinkMomentum = 0
