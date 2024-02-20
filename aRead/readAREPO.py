@@ -369,5 +369,17 @@ class readAREPO():
         self.comY = np.sum(self.y * self.mass) / np.sum(self.mass)
         self.comZ = np.sum(self.z * self.mass) / np.sum(self.mass)  
 
+        # Consider the sinks
+        if self.nSinks > 0:
+            # Calculate their centre of mass
+            self.comXs = np.sum(self.sinkX * self.sinkMass) / np.sum(self.sinkMass)
+            self.comYs = np.sum(self.sinkY * self.sinkMass) / np.sum(self.sinkMass)
+            self.comZs = np.sum(self.sinkZ * self.sinkMass) / np.sum(self.sinkMass)
+
+            # Adjust particle CoM accordingly
+            self.comX = (self.comX * np.sum(self.mass) + self.comXs * np.sum(self.sinkMass)) / (np.sum(self.mass) + np.sum(self.sinkMass))
+            self.comY = (self.comY * np.sum(self.mass) + self.comYs * np.sum(self.sinkMass)) / (np.sum(self.mass) + np.sum(self.sinkMass))
+            self.comZ = (self.comZ * np.sum(self.mass) + self.comZs * np.sum(self.sinkMass)) / (np.sum(self.mass) + np.sum(self.sinkMass))
+
         # Find distances to centre of mass
         self.rCOM = np.sqrt((self.x - self.comX)**2 + (self.y - self.comY)**2 + (self.z - self.comZ)**2)
