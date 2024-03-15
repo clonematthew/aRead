@@ -179,10 +179,11 @@ class readAREPO():
             else:
                 # Apply conversion factors if there is one
                 cgs = data[att].attrs.get("to_cgs")
+                print(cgs)
                 if cgs == None:
                     dataDict[att] = data
                 else:
-                    dataDict[att] = np.multiply(data, cgs)
+                    dataDict[att] = data * cgs
 
         return dataDict
     
