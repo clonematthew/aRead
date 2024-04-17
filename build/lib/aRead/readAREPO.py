@@ -14,57 +14,61 @@ class readAREPO():
         # Loading in hdf5 file and assigninig data
         self.dataDict = self.snapshotRead(filename)
 
-        # The 3-D Position and Velocitiy arrays
-        if np.any(self.snapshotAttributes == "Coordinates"):
-            positions = self.dataDict["Coordinates"]
-            splitPos = np.array_split(positions, 3, axis=1)
+        for i in range(len(self.snapshotAttributes)):
+            # Assign the positions
+            if self.snapshotAttributes[i] == "Coordinates":
+                positions = self.dataDict["Coordinates"]
+                splitPos = np.array_split(positions, 3, axis=1)
 
-            self.x = splitPos[0].reshape(self.nParticles)
-            self.y = splitPos[1].reshape(self.nParticles)
-            self.z = splitPos[2].reshape(self.nParticles)
+                self.x = splitPos[0].reshape(self.nParticles)
+                self.y = splitPos[1].reshape(self.nParticles)
+                self.z = splitPos[2].reshape(self.nParticles)
+            
+            # Assign the velocities
+            if self.snapshotAttributes[i] == "Velocities":
+                velocities = self.dataDict["Velocities"]
+                splitVels = np.array_split(velocities, 3, axis=1)
 
-        if np.any(self.snapshotAttributes == "Velocities"):
-            velocities = self.dataDict["Velocities"]
-            splitVels = np.array_split(velocities, 3, axis=1)
+                self.vx = splitVels[0].reshape(self.nParticles)
+                self.vy = splitVels[1].reshape(self.nParticles) 
+                self.vz = splitVels[2].reshape(self.nParticles) 
 
-            self.vx = splitVels[0].reshape(self.nParticles)
-            self.vy = splitVels[1].reshape(self.nParticles) 
-            self.vz = splitVels[2].reshape(self.nParticles) 
+            # Assign the accelerations
+            if self.snapshotAttributes[i] == "Acceleration":
+                accelerations = self.dataDict["Acceleration"]
+                splitAcc = np.array_split(accelerations, 3, axis=1)
 
-        if np.any(self.snapshotAttributes == "Acceleration"):
-            accelerations = self.dataDict["Acceleration"]
-            splitAcc = np.array_split(accelerations, 3, axis=1)
+                self.ax = splitAcc[0].reshape(self.nParticles)
+                self.ay = splitAcc[1].reshape(self.nParticles) 
+                self.az = splitAcc[2].reshape(self.nParticles) 
 
-            self.ax = splitAcc[0].reshape(self.nParticles)
-            self.ay = splitAcc[1].reshape(self.nParticles) 
-            self.az = splitAcc[2].reshape(self.nParticles) 
+            # The rest of the scalar attributes
+            if self.snapshotAttributes[i] == "Density":
+                self.rho = self.dataDict["Density"]
+                self.numberDensity = self.rho / (1.4 * mProt)
+            if self.snapshotAttributes[i] == "Masses":
+                self.mass = self.dataDict["Masses"] 
+            if self.snapshotAttributes[i] == "InternalEnergy":
+                self.u = self.dataDict["InternalEnergy"]
+            if self.snapshotAttributes[i] == "ParticleIDs":
+                self.ids = self.dataDict["ParticleIDs"]
+            if self.snapshotAttributes[i] == "DustTemperature":
+                self.dustTemp = self.dataDict["DustTemperature"]
+            if self.snapshotAttributes[i] == "ChemicalAbundances":
+                self.chem = self.dataDict["ChemicalAbundances"]
 
-        # The rest of the scalar attributes
-        if np.any(self.snapshotAttributes == "Density"):
-            self.rho = self.dataDict["Density"]
-            self.numberDensity = self.rho / (1.4 * mProt)
-        if np.any(self.snapshotAttributes == "Mass"):
-            self.mass = self.dataDict["Masses"] 
-        if np.any(self.snapshotAttributes == "InternalEnergy"):
-            self.u = self.dataDict["InternalEnergy"]
-        if np.any(self.snapshotAttributes == "ParticleIDs"):
-            self.ids = self.dataDict["ParticleIDs"]
-        if np.any(self.snapshotAttributes == "DustTemperature"):
-            self.dustTemp = self.dataDict["DustTemperature"]
-        if np.any(self.snapshotAttributes == "ChemicalAbundances"):
-            self.chem = self.dataDict["ChemicalAbundances"]
+                # Calculating the temperature of the gas
+                yn = self.rho / ((1 + 4 * 0.1) * mProt)
+                ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
+                energy = self.u * self.rho
+                self.gasTemp = 2 * energy  / (3 * ynTot * kB)
 
-            # Calculating the temperature of the gas
-            yn = self.rho / ((1 + 4 * 0.1) * mProt)
-            ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
-            energy = self.u * self.rho
-            self.gasTemp = 2 * energy  / (3 * ynTot * kB)
-        if np.any(self.snapshotAttributes == "Potential"):
-            self.potential = self.dataDict["Potential"]
-        if np.any(self.snapshotAttributes == "PotentialPeak"):
-            self.maxPotential = self.dataDict["PotentialPeak"]
-        if np.any(self.snapshotAttributes == "VelocityDivergence"):
-            self.velocityDivergence = self.dataDict["VelocityDivergence"]
+            if self.snapshotAttributes[i] == "Potential":
+                self.potential = self.dataDict["Potential"]
+            if self.snapshotAttributes[i] == "PotentialPeak":
+                self.maxPotential = self.dataDict["PotentialPeak"]
+            if self.snapshotAttributes[i] == "VelocityDivergence":
+                self.velocityDivergence = self.dataDict["VelocityDivergence"]
 
         # Loading chemistry if desired
         if chemistry:
