@@ -15,44 +15,56 @@ class readAREPO():
         self.dataDict = self.snapshotRead(filename)
 
         # The 3-D Position and Velocitiy arrays
-        positions = self.dataDict["Coordinates"]
-        splitPos = np.array_split(positions, 3, axis=1)
+        if np.any(self.snapshotAttributes == "Coordinates"):
+            positions = self.dataDict["Coordinates"]
+            splitPos = np.array_split(positions, 3, axis=1)
 
-        self.x = splitPos[0].reshape(self.nParticles)
-        self.y = splitPos[1].reshape(self.nParticles)
-        self.z = splitPos[2].reshape(self.nParticles)
+            self.x = splitPos[0].reshape(self.nParticles)
+            self.y = splitPos[1].reshape(self.nParticles)
+            self.z = splitPos[2].reshape(self.nParticles)
 
-        velocities = self.dataDict["Velocities"]
-        splitVels = np.array_split(velocities, 3, axis=1)
+        if np.any(self.snapshotAttributes == "Velocities"):
+            velocities = self.dataDict["Velocities"]
+            splitVels = np.array_split(velocities, 3, axis=1)
 
-        self.vx = splitVels[0].reshape(self.nParticles)
-        self.vy = splitVels[1].reshape(self.nParticles) 
-        self.vz = splitVels[2].reshape(self.nParticles) 
+            self.vx = splitVels[0].reshape(self.nParticles)
+            self.vy = splitVels[1].reshape(self.nParticles) 
+            self.vz = splitVels[2].reshape(self.nParticles) 
 
-        accelerations = self.dataDict["Acceleration"]
-        splitAcc = np.array_split(accelerations, 3, axis=1)
+        if np.any(self.snapshotAttributes == "Acceleration"):
+            accelerations = self.dataDict["Acceleration"]
+            splitAcc = np.array_split(accelerations, 3, axis=1)
 
-        self.ax = splitAcc[0].reshape(self.nParticles)
-        self.ay = splitAcc[1].reshape(self.nParticles) 
-        self.az = splitAcc[2].reshape(self.nParticles) 
+            self.ax = splitAcc[0].reshape(self.nParticles)
+            self.ay = splitAcc[1].reshape(self.nParticles) 
+            self.az = splitAcc[2].reshape(self.nParticles) 
 
         # The rest of the scalar attributes
-        self.rho = self.dataDict["Density"]
-        self.mass = self.dataDict["Masses"] 
-        self.u = self.dataDict["InternalEnergy"]
-        self.ids = self.dataDict["ParticleIDs"]
-        self.dustTemp = self.dataDict["DustTemperature"]
-        self.chem = self.dataDict["ChemicalAbundances"]
-        self.potential = self.dataDict["Potential"]
-        self.maxPotential = self.dataDict["PotentialPeak"]
-        self.numberDensity = self.rho / (1.4 * mProt) 
-        self.velocityDivergence = self.dataDict["VelocityDivergence"]
+        if np.any(self.snapshotAttributes == "Density"):
+            self.rho = self.dataDict["Density"]
+            self.numberDensity = self.rho / (1.4 * mProt)
+        if np.any(self.snapshotAttributes == "Mass"):
+            self.mass = self.dataDict["Masses"] 
+        if np.any(self.snapshotAttributes == "InternalEnergy"):
+            self.u = self.dataDict["InternalEnergy"]
+        if np.any(self.snapshotAttributes == "ParticleIDs"):
+            self.ids = self.dataDict["ParticleIDs"]
+        if np.any(self.snapshotAttributes == "DustTemperature"):
+            self.dustTemp = self.dataDict["DustTemperature"]
+        if np.any(self.snapshotAttributes == "ChemicalAbundances"):
+            self.chem = self.dataDict["ChemicalAbundances"]
 
-        # Calculating the temperature of the gas
-        yn = self.rho / ((1 + 4 * 0.1) * mProt)
-        ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
-        energy = self.u * self.rho
-        self.gasTemp = 2 * energy  / (3 * ynTot * kB)
+            # Calculating the temperature of the gas
+            yn = self.rho / ((1 + 4 * 0.1) * mProt)
+            ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
+            energy = self.u * self.rho
+            self.gasTemp = 2 * energy  / (3 * ynTot * kB)
+        if np.any(self.snapshotAttributes == "Potential"):
+            self.potential = self.dataDict["Potential"]
+        if np.any(self.snapshotAttributes == "PotentialPeak"):
+            self.maxPotential = self.dataDict["PotentialPeak"]
+        if np.any(self.snapshotAttributes == "VelocityDivergence"):
+            self.velocityDivergence = self.dataDict["VelocityDivergence"]
 
         # Loading chemistry if desired
         if chemistry:
@@ -169,6 +181,7 @@ class readAREPO():
         dataDict = {}
         data = snapshotFile["PartType0"]
         attrs = list(data.keys())
+        self.snapshotAttributes = attrs
 
         # Loop through each attribute key
         for att in attrs:
