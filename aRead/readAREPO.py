@@ -56,19 +56,21 @@ class readAREPO():
                 self.dustTemp = self.dataDict["DustTemperature"]
             if self.snapshotAttributes[i] == "ChemicalAbundances":
                 self.chem = self.dataDict["ChemicalAbundances"]
-
-                # Calculating the temperature of the gas
-                yn = self.rho / ((1 + 4 * 0.1) * mProt)
-                ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
-                energy = self.u * self.rho
-                self.gasTemp = 2 * energy  / (3 * ynTot * kB)
-
             if self.snapshotAttributes[i] == "Potential":
                 self.potential = self.dataDict["Potential"]
             if self.snapshotAttributes[i] == "PotentialPeak":
                 self.maxPotential = self.dataDict["PotentialPeak"]
             if self.snapshotAttributes[i] == "VelocityDivergence":
                 self.velocityDivergence = self.dataDict["VelocityDivergence"]
+
+        # Using proxy for not an IC snap 
+        # TODO: Fix
+        if len(self.snapshotAttributes) > 7:
+            # Calculating the temperature of the gas
+            yn = self.rho / ((1 + 4 * 0.1) * mProt)
+            ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
+            energy = self.u * self.rho
+            self.gasTemp = 2 * energy  / (3 * ynTot * kB)
 
         # Loading chemistry if desired
         if chemistry:
