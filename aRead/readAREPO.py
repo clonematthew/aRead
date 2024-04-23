@@ -10,14 +10,21 @@ kB =  1.38e-16   # cgs unit
 
 # Function to open arepo data 
 class readAREPO():
-    def __init__(self, filename):
+    def __init__(self, filename, attrsType=0, chemistry=False, rates=False):
+        if attrsType == 0:
+            # Define basic set of attributes to read
+            readList = ["Coordinates", "Masses", "Velocities", "Density", "ChemicalAbundances"]
+        else:
+            # Read everything
+            readList = []
+
         # Loading in hdf5 file and assigninig data
-        dataDict = self.snapshotRead(filename)
+        self.dataDict = self.snapshotRead(filename, readList)
 
         for i in range(len(self.snapshotAttributes)):
             # Assign the positions
             if self.snapshotAttributes[i] == "Coordinates":
-                positions = dataDict[i]
+                positions = self.dataDict["Coordinates"]
                 splitPos = np.array_split(positions, 3, axis=1)
 
                 self.x = splitPos[0].reshape(self.nParticles)
@@ -26,7 +33,7 @@ class readAREPO():
             
             # Assign the velocities
             if self.snapshotAttributes[i] == "Velocities":
-                velocities = dataDict[i]
+                velocities = self.dataDict["Velocities"]
                 splitVels = np.array_split(velocities, 3, axis=1)
 
                 self.vx = splitVels[0].reshape(self.nParticles)
@@ -35,7 +42,7 @@ class readAREPO():
 
             # Assign the accelerations
             if self.snapshotAttributes[i] == "Acceleration":
-                accelerations = dataDict[i]
+                accelerations = self.dataDict["Acceleration"]
                 splitAcc = np.array_split(accelerations, 3, axis=1)
 
                 self.ax = splitAcc[0].reshape(self.nParticles)
@@ -44,30 +51,41 @@ class readAREPO():
 
             # The rest of the scalar attributes
             if self.snapshotAttributes[i] == "Density":
-                self.rho = dataDict[i]
+                self.rho = self.dataDict["Density"]
                 self.numberDensity = self.rho / (1.4 * mProt)
+
             if self.snapshotAttributes[i] == "Masses":
-                self.mass = dataDict[i]
+                self.mass = self.dataDict["Masses"] 
+
             if self.snapshotAttributes[i] == "InternalEnergy":
-                self.u = dataDict[i]
+                self.u = self.dataDict["InternalEnergy"]
+
             if self.snapshotAttributes[i] == "ParticleIDs":
-                self.ids = dataDict[i]
+                self.ids = self.dataDict["ParticleIDs"]
+
             if self.snapshotAttributes[i] == "DustTemperature":
-                self.dustTemp = dataDict[i]
+                self.dustTemp = self.dataDict["DustTemperature"]
+
             if self.snapshotAttributes[i] == "ChemicalAbundances":
-                self.chem = dataDict[i]
-                self.extractChemistry()
+                self.chem = self.dataDict["ChemicalAbundances"]
+                if chemistry:
+                    self.extractChemistry()
+
             if self.snapshotAttributes[i] == "Potential":
-                self.potential = dataDict[i]
+                self.potential = self.dataDict["Potential"]
+
             if self.snapshotAttributes[i] == "PotentialPeak":
-                self.maxPotential = dataDict[i]
+                self.maxPotential = self.dataDict["PotentialPeak"]
+
             if self.snapshotAttributes[i] == "VelocityDivergence":
-                self.velocityDivergence = dataDict[i]
-            if self.snapshotAttributes[i] == "SGCHEM_HeatCoolRates":
-                self.rates = dataDict[i]
+                self.velocityDivergence = self.dataDict["VelocityDivergence"]
+
+            if self.snapshotAttributes[i] == "SGCHEM_HeatCoolRates" and rates:
+                self.rates = self.dataDict["SGCHEM_HeatCoolRates"]
                 self.extractRates()
 
-        # Using proxy for not an IC snap, needs fixing at some point
+        # Using proxy for not an IC snap 
+        # TODO: Fix
         if len(self.snapshotAttributes) > 7:
             # Calculating the temperature of the gas
             yn = self.rho / ((1 + 4 * 0.1) * mProt)
@@ -128,21 +146,21 @@ class readAREPO():
             sinkDict = self.readSinks(snapshotFile)
 
             # Splitting and storing coordinates
-            splitSinkPos = np.array_split(sinkDict[0], 3, axis=1)
+            splitSinkPos = np.array_split(sinkDict["Coordinates"], 3, axis=1)
             self.sinkX = splitSinkPos[0].reshape(self.nSinks)
             self.sinkY = splitSinkPos[1].reshape(self.nSinks) 
             self.sinkZ = splitSinkPos[2].reshape(self.nSinks)
 
             # Splitting and storing velocities
-            splitSinkVel = np.array_split(sinkDict[2], 3, axis=1)
+            splitSinkVel = np.array_split(sinkDict["Velocities"], 3, axis=1)
             self.sinkVX = splitSinkVel[0].reshape(self.nSinks)
             self.sinkVY = splitSinkVel[1].reshape(self.nSinks)
             self.sinkVZ = splitSinkVel[2].reshape(self.nSinks)
 
             # Storing masses and potentials
-            self.sinkMass = sinkDict[1]
-            self.sinkPotential = sinkDict[3]
-            self.sinkID = sinkDict[4]
+            self.sinkMass = sinkDict["Masses"]
+            self.sinkPotential = sinkDict["Potential"]
+            self.sinkID = sinkDict["ParticleIDs"]
 
     # Function to read the sink data stored in the snapshot files
     def readSinks(self, snapshotFile):
@@ -150,7 +168,7 @@ class readAREPO():
         sinkData = snapshotFile["PartType5"]
 
         # Setting up sink particle dict
-        sinkDict = []
+        sinkDict = {}
 
         # List of attributes to read
         attrs = ["Coordinates", "Masses", "Velocities", "Potential", "ParticleIDs"]
@@ -161,16 +179,16 @@ class readAREPO():
             dat = sinkData[att][:]
 
             if att == "ParticleIDs":
-                sinkDict.append(dat)
+                sinkDict[att] = dat
             else:
                 # Converting
                 cgs = sinkData[att].attrs.get("to_cgs")
-                sinkDict.append(np.multiply(dat, cgs))
+                sinkDict[att] = np.multiply(dat, cgs)
 
         return sinkDict
     
     # Read snapshot file (Part Type 0)
-    def snapshotRead(self, filename):
+    def snapshotRead(self, filename, readList):
         # Read the snapshot with h5py
         snapshotFile = h5py.File(filename, "r")
 
@@ -178,10 +196,15 @@ class readAREPO():
         self.readHeader(snapshotFile)
 
         # Set up data dict and get kets
+        dataDict = {}
         data = snapshotFile["PartType0"]
-        attrs = list(data.keys())
+        attrs = list(data.keys())            
         self.snapshotAttributes = attrs
-        dataDict = []
+
+        # Use the readlist if we're given one
+        if len(readList) > 0:
+            attrs = readList
+            self.snapshotAttributes = readList
 
         # Loop through each attribute key
         for att in attrs:
@@ -193,9 +216,9 @@ class readAREPO():
                 # Apply conversion factors if there is one
                 cgs = data[att].attrs.get("to_cgs")
                 if cgs == None:
-                    dataDict.append(dat)
+                    dataDict[att] = dat
                 else:
-                    dataDict.append(dat * cgs)
+                    dataDict[att] = np.multiply(dat, cgs)
 
         return dataDict
     
