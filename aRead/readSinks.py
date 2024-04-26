@@ -6,7 +6,7 @@ import os
 # Class to hold the sink attributes
 class readSinks():
     # Initialisation function
-    def __init__(self, type, filepath, nSnaps=1, sinkMax=1000, dumpMax=5000):
+    def __init__(self, type, filepath, nSnaps=1, sinkMax=1000, dumpMax=5000, simple=False):
         # Initialise buffer size flag
         self.bufferSizeError = False
 
@@ -21,7 +21,7 @@ class readSinks():
             self.readSinkEvolution(filepath, sinkMax, dumpMax)
         # If we have multiple sink evolution files to combine
         elif type== 4:
-            self.readAllEvolution(filepath, sinkMax, dumpMax)
+            self.readAllEvolution(filepath, sinkMax, dumpMax, simple)
         else:
             pass
 
@@ -194,7 +194,7 @@ class readSinks():
         self.nSinks = np.array(self.nSinks)
 
     # Function to read all the evolution files in a directory
-    def readAllEvolution(self, filepath, sinkMax, dumpMax):
+    def readAllEvolution(self, filepath, sinkMax, dumpMax, simple=False):
         # List the files in this directory
         allFiles = os.listdir(filepath)
 
@@ -220,16 +220,19 @@ class readSinks():
                     self.allTime = self.time[:index]
                     self.allSinks = self.nSinks[:index]
                     self.allIDs = self.sinkID[:index]
-                    self.allOrders = self.formationOrder[:index]
-                    self.allFormationTimes = self.formationTime[:index]
-                    self.allFormationMass = self.formationMass[:index]
                     self.allMasses = self.sinkMass[:index]
                     self.allX = self.sinkX[:index]
                     self.allY = self.sinkY[:index]
                     self.allZ = self.sinkZ[:index]
-                    self.allVX = self.sinkVX[:index]
-                    self.allVY = self.sinkVY[:index]
-                    self.allVZ = self.sinkVZ[:index]
+
+                    # Load more complex values 
+                    if not simple:
+                        self.allOrders = self.formationOrder[:index]
+                        self.allFormationTimes = self.formationTime[:index]
+                        self.allFormationMass = self.formationMass[:index]
+                        self.allVX = self.sinkVX[:index]
+                        self.allVY = self.sinkVY[:index]
+                        self.allVZ = self.sinkVZ[:index]
 
                 # Otherwise, add to existing
                 else:
@@ -249,16 +252,18 @@ class readSinks():
                         self.allTime = np.concatenate((self.allTime[:startIndex], self.time[:index]))
                         self.allSinks = np.concatenate((self.allSinks[:startIndex], self.nSinks[:index]))
                         self.allIDs = np.concatenate((self.allIDs[:startIndex], self.sinkID[:index]))
-                        self.allOrders = np.concatenate((self.allOrders[:startIndex], self.formationOrder[:index]))
-                        self.allFormationTimes = np.concatenate((self.allFormationTimes[:startIndex], self.formationTime[:index]))
-                        self.allFormationMass = np.concatenate((self.allFormationMass[:startIndex], self.formationMass[:index]))
                         self.allMasses = np.concatenate((self.allMasses[:startIndex], self.sinkMass[:index]))
                         self.allX = np.concatenate((self.allX[:startIndex], self.sinkX[:index]))
                         self.allY = np.concatenate((self.allY[:startIndex], self.sinkY[:index]))
                         self.allZ = np.concatenate((self.allZ[:startIndex], self.sinkZ[:index]))
-                        self.allVX = np.concatenate((self.allVX[:startIndex], self.sinkVX[:index]))
-                        self.allVY = np.concatenate((self.allVY[:startIndex], self.sinkVZ[:index]))
-                        self.allVZ = np.concatenate((self.allVZ[:startIndex], self.sinkVZ[:index]))
+
+                        if not simple:
+                            self.allOrders = np.concatenate((self.allOrders[:startIndex], self.formationOrder[:index]))
+                            self.allFormationTimes = np.concatenate((self.allFormationTimes[:startIndex], self.formationTime[:index]))
+                            self.allFormationMass = np.concatenate((self.allFormationMass[:startIndex], self.formationMass[:index]))
+                            self.allVX = np.concatenate((self.allVX[:startIndex], self.sinkVX[:index]))
+                            self.allVY = np.concatenate((self.allVY[:startIndex], self.sinkVZ[:index]))
+                            self.allVZ = np.concatenate((self.allVZ[:startIndex], self.sinkVZ[:index]))
 
             # End the while loop
             self.bufferSizeError = True
@@ -267,13 +272,15 @@ class readSinks():
         self.time = self.allTime
         self.nSinks = self.allSinks
         self.sinkID = self.allIDs
-        self.formationOrder = self.allOrders
-        self.formationTime = self.allFormationTimes
-        self.formationMass = self.allFormationMass
         self.sinkMass = self.allMasses
         self.sinkX = self.allX
         self.sinkY = self.allY
         self.sinkZ = self.allZ
-        self.sinkVX = self.allVX
-        self.sinkVY = self.allVY
-        self.sinkVZ = self.allVZ
+
+        if not simple:
+            self.formationOrder = self.allOrders
+            self.formationTime = self.allFormationTimes
+            self.formationMass = self.allFormationMass
+            self.sinkVX = self.allVX
+            self.sinkVY = self.allVY
+            self.sinkVZ = self.allVZ
