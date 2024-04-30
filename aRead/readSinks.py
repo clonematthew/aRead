@@ -132,17 +132,17 @@ class readSinks():
         # Creating arrays to store sink variables
         self.time = []
         self.nSinks = []
-        self.sinkX = np.zeros((dumpMax, sinkMax))
-        self.sinkY = np.zeros((dumpMax, sinkMax))
-        self.sinkZ = np.zeros((dumpMax, sinkMax))
-        self.sinkVX = np.zeros((dumpMax, sinkMax))
-        self.sinkVY = np.zeros((dumpMax, sinkMax))
-        self.sinkVZ = np.zeros((dumpMax, sinkMax))
-        self.sinkMass = np.zeros((dumpMax, sinkMax))
-        self.formationMass = np.zeros((dumpMax, sinkMax))
-        self.formationTime = np.zeros((dumpMax, sinkMax))
-        self.sinkID = np.zeros((dumpMax, sinkMax))
-        self.formationOrder = np.zeros((dumpMax, sinkMax))
+        self.sinkX = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkY = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkZ = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkVX = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkVY = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkVZ = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkMass = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.formationMass = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.formationTime = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.sinkID = np.zeros((dumpMax, sinkMax), dtype=np.int64)
+        self.formationOrder = np.zeros((dumpMax, sinkMax), dtype=np.int32)
 
         # Creating counter variable
         dumpCount = 0
