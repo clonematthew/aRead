@@ -215,7 +215,7 @@ class readAREPO():
             else:
                 # Apply conversion factors if there is one
                 cgs = data[att].attrs.get("to_cgs")
-                if cgs == None:
+                if cgs == None or cgs == 0.0:
                     dataDict[att] = dat
                 else:
                     dataDict[att] = np.multiply(dat, cgs)
