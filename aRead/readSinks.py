@@ -140,9 +140,9 @@ class readSinks():
         self.sinkVZ = np.zeros((dumpMax, sinkMax), dtype=np.float32)
         self.sinkMass = np.zeros((dumpMax, sinkMax), dtype=np.float32)
         self.formationMass = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.formationTime = np.zeros((dumpMax, sinkMax), dtype=np.float32)
+        self.formationTime = np.zeros((dumpMax, sinkMax), dtype=np.float64)
         self.sinkID = np.zeros((dumpMax, sinkMax), dtype=np.int64)
-        self.formationOrder = np.zeros((dumpMax, sinkMax), dtype=np.int32)
+        self.formationOrder = np.zeros((dumpMax, sinkMax), dtype=np.int64)
 
         # Creating counter variable
         dumpCount = 0
