@@ -125,6 +125,12 @@ class readAREPO():
         self.CIIfineStruc = self.rates[:,9]         # CII Fine structure cooling
         self.dustRecomb = self.rates[:,10]          # Dust recombination cooling
         self.highTfineStruc = self.rates[:,11]      # High temperature fine structure cooling (multiple)
+        self.H2dissCollisional = self.rates[:,12]   # H2 Collisional Dissassociation
+        self.H2dissPhoto = self.rates[:,13]         # H2 Photodissasociation
+        self.UVpump = self.rates[:,14]              # UV Pumping of H2
+        self.H2form = self.rates[:,15]              # H2 Formation Heating
+        self.H2ionCollisional = self.rates[:,16]    # H2 Collisional Ionization
+        self.HIIIrecomb = self.rates[:,17]          # HIII Recombination Cooling 
         self.COcool = self.rates[:,18] + self.rates[:,19] + self.rates[:,20] # CO cooling (multiple isotopes)
         self.CIfineStruc = self.rates[:,21]         # CI Fine structure cooling
 
