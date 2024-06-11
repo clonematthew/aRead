@@ -80,7 +80,7 @@ class readAREPO():
             if self.snapshotAttributes[i] == "VelocityDivergence":
                 self.velocityDivergence = self.dataDict["VelocityDivergence"]
 
-            if self.snapshotAttributes[i] == "SGCHEM_HeatCoolRates" and rates:
+            if self.snapshotAttributes[i] == "SGCHEM_HeatCoolRates":
                 self.rates = self.dataDict["SGCHEM_HeatCoolRates"]
                 self.extractRates()
 
@@ -93,7 +93,7 @@ class readAREPO():
             energy = self.u * self.rho
             self.gasTemp = 2 * energy  / (3 * ynTot * kB)
 
-    # Function to extract all the chemistry information
+    # Function to extract all the chemistry information and assign to variables
     def extractChemistry(self, totC=1.4e-4, totO=3.2e-4):
         # Getting the different abundances from the chemistry data
         self.H2 = self.chem[:,0]
@@ -121,8 +121,8 @@ class readAREPO():
         self.bremsstrahlung = self.rates[:,5]       # Thermal bremsstrahlung
         self.cosmicRays = self.rates[:,6]           # Cosmic Ray Heating
         self.photoElectric = self.rates[:,7]        # Photoelectric heating
-        self.OIfineStruc = self.rates[:,8]          # OI Fine structure cooling
-        self.CIIfineStruc = self.rates[:,9]         # CII Fine structure cooling
+        self.OIfineStruc = self.rates[:,8]          # O Fine structure cooling
+        self.CIIfineStruc = self.rates[:,9]         # C+ Fine structure cooling
         self.dustRecomb = self.rates[:,10]          # Dust recombination cooling
         self.highTfineStruc = self.rates[:,11]      # High temperature fine structure cooling (multiple)
         self.H2dissCollisional = self.rates[:,12]   # H2 Collisional Dissassociation
@@ -130,9 +130,9 @@ class readAREPO():
         self.UVpump = self.rates[:,14]              # UV Pumping of H2
         self.H2form = self.rates[:,15]              # H2 Formation Heating
         self.H2ionCollisional = self.rates[:,16]    # H2 Collisional Ionization
-        self.HIIIrecomb = self.rates[:,17]          # HIII Recombination Cooling 
+        self.HIIIrecomb = self.rates[:,17]          # H+ Recombination Cooling 
         self.COcool = self.rates[:,18] + self.rates[:,19] + self.rates[:,20] # CO cooling (multiple isotopes)
-        self.CIfineStruc = self.rates[:,21]         # CI Fine structure cooling
+        self.CIfineStruc = self.rates[:,21]         # C Fine structure cooling
 
     # Function to read the header atrributes
     def readHeader(self, snapshotFile):
@@ -244,10 +244,9 @@ class readAREPO():
 
         # Checking if we need to log the cmap and plotting
         plt.imshow(finalHist, aspect="auto", cmap=cmap, origin="lower", extent=[yb[0], yb[-1], xb[0], xb[-1]])
-        plt.colorbar()
 
     # Plot a temperature-density diagram
-    def tempDensity(self, cmin=0.001):
+    def tempDensity(self, cmin=0.001, formatting=True):
         # Log the variables for the axes
         nDenst = np.log10(self.numberDensity)
         temp = np.log10(self.gasTemp)
@@ -258,9 +257,11 @@ class readAREPO():
 
         # Make the plot
         hist = plt.hist2d(nDenst, temp, bins=1000, cmap="jet", weights=weight, cmin=cmin, norm=norm)
-        plt.colorbar(label="Mass $\\rm [M_\odot]$")
-        plt.xlabel("Number density, $\\rm [cm^{-3}]$")
-        plt.ylabel("Temperature, $\\rm [K]$")
+
+        if formatting:
+            plt.colorbar(label="Mass $\\rm [M_\odot]$")
+            plt.xlabel("Number density, $\\rm [cm^{-3}]$")
+            plt.ylabel("Temperature, $\\rm [K]$")
 
     # Plot a radial density profile
     def radialDensity(self):
@@ -321,7 +322,7 @@ class readAREPO():
         plt.ylabel("Density, $\\rm \log{\\rho}$")
 
     # Function to see where the gas and dust are coupling
-    def gasDustTemps(self, binNum=50):
+    def gasDustTemps(self, binNum=50, formatting=True):
         # Logging number denisty
         numDense = np.log10(self.numberDensity)
 
@@ -360,12 +361,14 @@ class readAREPO():
 
         # Plotting the gas and dust temperatures
         plt.errorbar(densityMid, avgGas, yerr=stdGas, fmt="g.", capsize=3, label="Gas", alpha=0.6)
-        plt.ylabel("Temperature, $\\rm K$")
-        plt.yticks([0, 1, 2, 3, 4], ["1", "10", "100", "1000", "10000"])
         plt.errorbar(densityMid, avgDust, yerr=stdDust, fmt="b.", capsize=3, label="Dust", alpha=0.6)
-        plt.xlabel("Number Density, $\\rm {cm^{-3}}$")
-        plt.xticks([-2, 0, 2, 4, 6, 8, 10], ["0.01", "1", "100", "10000", "$\\rm 10^6$", "$\\rm 10^8$", "$\\rm 10^{10}$"] )
-        plt.legend(loc="upper right")
+
+        if formatting:
+            plt.ylabel("Temperature, $\\rm K$")
+            plt.yticks([0, 1, 2, 3, 4], ["1", "10", "100", "1000", "10000"])
+            plt.xlabel("Number Density, $\\rm {cm^{-3}}$")
+            plt.xticks([-2, 0, 2, 4, 6, 8, 10], ["0.01", "1", "100", "10000", "$\\rm 10^6$", "$\\rm 10^8$", "$\\rm 10^{10}$"] )
+            plt.legend(loc="upper right")
 
     # Plotting the snapshot's IMF
     def imfPlot(self, color="r", label="UV1", bins=20, density=False):
@@ -416,3 +419,34 @@ class readAREPO():
 
         # Find distances to centre of mass
         self.rCOM = np.sqrt((self.x - self.comX)**2 + (self.y - self.comY)**2 + (self.z - self.comZ)**2)
+
+    # Plot the fractional heating and cooling rates
+    def plotHealCoolRates(self, nBins=100, normalised=False):
+        # Create bins 
+        rates = np.zeros((nBins, np.shape(self.rates)[1]+1))
+        densityBins = 10**np.linspace(np.log10(np.min(self.numberDensity))+0.0001, np.log10(np.max(self..numberDensity))-0.0001, nBins+1)
+
+        # Loop through each density bin
+        for i in range(nBins):
+            inBin = np.where((self.numberDensity > densityBins[i]) & (self.numberDensity <= densityBins[i+1]))
+
+            # Pass if we've got an empty bin
+            if len(inBin[0]) == 0:
+                rates[i] = rates[i-1]
+            else:
+                # Extract each of the rates from the rates array
+                for j in range(np.shape(self.rates)[1]):
+                    rates[i,j] = np.abs(np.median(self.rates[:,j][inBin]))
+    
+                # Add in the pdV work term
+                rates[i,np.shape(self.rates)[1]] = abs(np.median((5/3 - 1) * self.velocityDivergence[inBin] * (36447.2682 / 1e17) * self.rho[inBin] * self.u[inBin]))
+
+            if normalised:
+                rates[i] = rates[i] / np.sum(rates[i])    
+
+        # Plot the data
+        labels = ["Gas Grain", "pdV Work", "$\\rm H_2$ Formation", "$\\rm H_2$ Dissassociation", "Cosmic Rays", "Photoelectric","Bremsstrahlung", "O Cooling", "H+ Recombination", "$\\rm H_2$ Cooling", "C Cooling", "C+ Cooling", "CO Cooling", "Atomic Cooling", "High T Fine Structure", "Collisional Ionization", "Lyman-$\\rm \\alpha$ Cooling", "Dust Recombination"]
+        colours = ["green", "lightgreen", "gold", "darkorange", "orange", "red", "darkred", "lightblue",  "cornflowerblue", "royalblue", "blue", "mediumblue", "darkblue", "slateblue", "mediumpurple", "purple", "gray", "black"]
+
+        ratArr = [rates[:,0], rates[:,-1], rates[:,15], (rates[:,12]+rates[:,13]), rates[:,6], rates[:,7], rates[:,5], rates[:,8], rates[:,17], rates[:,1], rates[:,9], rates[:,-2], (rates[:,18]+rates[:,19]+rates[:,20]), rates[:,2],  rates[:,11], rates[:,16], rates[:,3], rates[:,10]]
+        a = plt.stackplot(densityBins, ratArr, labels=labels, colors=colours)
