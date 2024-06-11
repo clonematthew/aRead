@@ -424,7 +424,7 @@ class readAREPO():
     def plotHealCoolRates(self, nBins=100, normalised=False):
         # Create bins 
         rates = np.zeros((nBins, np.shape(self.rates)[1]+1))
-        densityBins = 10**np.linspace(np.log10(np.min(self.numberDensity))+0.0001, np.log10(np.max(self..numberDensity))-0.0001, nBins+1)
+        densityBins = 10**np.linspace(np.log10(np.min(self.numberDensity))+0.0001, np.log10(np.max(self.numberDensity))-0.0001, nBins+1)
 
         # Loop through each density bin
         for i in range(nBins):
