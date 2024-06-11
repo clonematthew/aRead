@@ -447,6 +447,9 @@ class readAREPO():
         # Plot the data
         labels = ["Gas Grain", "pdV Work", "$\\rm H_2$ Formation", "$\\rm H_2$ Dissassociation", "Cosmic Rays", "Photoelectric","Bremsstrahlung", "O Cooling", "H+ Recombination", "$\\rm H_2$ Cooling", "C Cooling", "C+ Cooling", "CO Cooling", "Atomic Cooling", "High T Fine Structure", "Collisional Ionization", "Lyman-$\\rm \\alpha$ Cooling", "Dust Recombination"]
         colours = ["green", "lightgreen", "gold", "darkorange", "orange", "red", "darkred", "lightblue",  "cornflowerblue", "royalblue", "blue", "mediumblue", "darkblue", "slateblue", "mediumpurple", "purple", "gray", "black"]
-
         ratArr = [rates[:,0], rates[:,-1], rates[:,15], (rates[:,12]+rates[:,13]), rates[:,6], rates[:,7], rates[:,5], rates[:,8], rates[:,17], rates[:,1], rates[:,9], rates[:,-2], (rates[:,18]+rates[:,19]+rates[:,20]), rates[:,2],  rates[:,11], rates[:,16], rates[:,3], rates[:,10]]
-        a = plt.stackplot(densityBins, ratArr, labels=labels, colors=colours)
+           
+        if normalised == True:
+            a = plt.stackplot((densityBins[1:]+densityBins[:-1])/2, ratArr, labels=labels, colors=colours)
+        else:
+            return (densityBins[1:]+densityBins[:-1])/2, ratArr, labels, colours
