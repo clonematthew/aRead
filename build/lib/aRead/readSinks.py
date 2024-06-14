@@ -82,7 +82,7 @@ class readSinks():
             self.snapTime[i] = self.time
 
     # Function to open up a sink evolution file and assign variables
-    def openSinkEvolution(self, filepath, dumpMax, newSinks, sizeOverride=0):
+    def openSinkEvolution(self, filepath, dumpMax=5000, newSinks=1000, sizeOverride=0):
         # Open the file initially
         with open(filepath, "rb") as fInit:
             # We'll open up the first time and nSinks to tell us how big our arrays should be
