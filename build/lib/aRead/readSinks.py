@@ -5,11 +5,21 @@ import os
 
 # Class to hold and read sink attributes
 class readSinks():
-    def __init__(self):
+    def __init__(self, type, filepath, nStart=0, nEnd=100, dumpMax=5000, newSinks=100):
         # The types and length of the data in the dumps.
         # Change this if using a different format or extra variables
         self.dataHash = "ddddddddddddliiii"
         self.dataBytes = 120
+
+        # Use the different read functions based on type
+        if type == 1:
+            self.openSinkSnap(filepath)
+        if type == 2:
+            self.readSinkSnaps(filepath, nStart, nEnd)
+        if type == 3:
+            self.openSinkEvolution(filepath, dumpMax, newSinks)
+        if type == 4:
+            self.readAllEvolution(filepath)
 
     # Function to open up a singular sink snapshot and assign variables
     def openSinkSnap(self, filepath):
@@ -42,9 +52,10 @@ class readSinks():
         self.formationMass  = sinkData[10::dataHashLength]
         self.formationTime  = sinkData[11::dataHashLength]
         self.sinkID         = sinkData[12::dataHashLength]
+        self.formationOrder = sinkData[15::dataHashLength]
 
     # Function to read multiple sink snapshots and assign variables
-    def readSinkSnaps(self, filepath, nStart=0, nEnd=100):
+    def readSinkSnaps(self, filepath, nStart, nEnd):
         snapPrefix = "sink_snap_"
 
         # Creating arrays to store data
@@ -71,7 +82,7 @@ class readSinks():
             self.snapTime[i] = self.time
 
     # Function to open up a sink evolution file and assign variables
-    def openSinkEvolution(self, filepath, dumpMax=5000, newSinks=1000, sizeOverride=0):
+    def openSinkEvolution(self, filepath, dumpMax, newSinks, sizeOverride=0):
         # Open the file initially
         with open(filepath, "rb") as fInit:
             # We'll open up the first time and nSinks to tell us how big our arrays should be
@@ -98,6 +109,7 @@ class readSinks():
         self.sinkMass       = np.zeros((dumpMax, sinkSize), dtype=np.float32)
         self.formationMass  = np.zeros((dumpMax, sinkSize), dtype=np.float32)
         self.formationTime  = np.zeros((dumpMax, sinkSize), dtype=np.float64)
+        self.formationOrder = np.zeros((dumpMax, sinkSize), dtype=np.int64)
         self.sinkID         = np.zeros((dumpMax, sinkSize), dtype=np.int64)
 
         # Loop through the file and keep reading until we can't anymore
@@ -135,6 +147,7 @@ class readSinks():
                     self.formationMass[dumpCount, :nSinksHere]  = sinkData[10::dataHashLength]
                     self.formationTime[dumpCount, :nSinksHere]  = sinkData[11::dataHashLength]
                     self.sinkID[dumpCount, :nSinksHere]         = sinkData[12::dataHashLength]
+                    self.formationOrder[dumpCount, :nSinksHere] = sinkData[15::dataHashLength]
 
                     # Increase the counter
                     dumpCount += 1
@@ -180,6 +193,7 @@ class readSinks():
                 self.allMasses          = self.sinkMass[:nDumps]
                 self.allFormationTimes  = self.formationTime[:nDumps]
                 self.allFormationMass   = self.formationMass[:nDumps]
+                self.allFormationOrder  = self.formationOrder[:nDumps]
             else:
                 # Otherwise we simply add to the existing ones
                 if len(self.time) == 0:
@@ -208,17 +222,19 @@ class readSinks():
                 self.allMasses          = np.concatenate((self.allMasses[:startIndex], self.sinkMass[:nDumps]))
                 self.allFormationTimes  = np.concatenate((self.allFormationTimes[:startIndex], self.formationTime[:nDumps]))
                 self.allFormationMass   = np.concatenate((self.allFormationMass[:startIndex], self.formationMass[:nDumps]))
+                self.allFormationOrder  = np.concatenate((self.allFormationOrder[:startIndex], self.formationOrder[:nDumps]))
 
         # Re-assign to the normal array names
-        self.time = self.allTime
-        self.nSinks = self.allSinks
-        self.sinkX = self.allX
-        self.sinkY = self.allY
-        self.sinkZ = self.allZ
-        self.sinkVX = self.allVX
-        self.sinkVY = self.allVY
-        self.sinkVZ = self.allVZ
-        self.sinkID = self.allIDs
-        self.sinkMass = self.allMasses
-        self.formationTime = self.allFormationTimes
-        self.formationMass = self.allFormationMass
+        self.time           = self.allTime
+        self.nSinks         = self.allSinks
+        self.sinkX          = self.allX
+        self.sinkY          = self.allY
+        self.sinkZ          = self.allZ
+        self.sinkVX         = self.allVX
+        self.sinkVY         = self.allVY
+        self.sinkVZ         = self.allVZ
+        self.sinkID         = self.allIDs
+        self.sinkMass       = self.allMasses
+        self.formationTime  = self.allFormationTimes
+        self.formationMass  = self.allFormationMass
+        self.formationOrder = self.formationOrder
