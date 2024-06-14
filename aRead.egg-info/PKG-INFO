@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: aRead
-Version: 0.19
+Version: 0.20
 Summary: Package for opening AREPO snapshot files
 Author: Matt Cusack
 Author-email: cusackmt@cardiff.ac.uk
@@ -14,14 +14,14 @@ Note - readAREPO opens .hdf5 snapshots only, i.e snapshot file type 3.
 
 #### readSinks
 
-readSinks has 4 different modes of operation:
+Function for reading in snapshots made by the SINK_PARTICLES module for AREPO. There are four functions available in this class:
 
-- 1 - Open a single sink snapshot, provide the path to the snapshot including the snapshot name.
+- openSinkSnap: Opens one sink snapshot.
 
-- 2 - Open multiple sink snapshots, provide the path to the *directory* containing sink snapshots and the number of sink snapshots to read (from 0-n).
+- readSinkSnaps: Reads a number of sink snapshots and calculates the total mass in sinks, number of sinks and time.
 
-- 3 - Open a sink evolution file, provide the path to the evolution file including its name.
+- openSinkEvolution: Opens one sink evolution file.
 
-- 4 - Open multiple sink evolution files (and combine), provide the path to the *directory* containing the sink evolution files.
+- readSinkEvolution: Reads all sink evolution files in a directory and combines all their data into arrays.
 
-Note - mode 2 only provides the total mass in sinks, the number of sinks and the time, whereas modes 1, 3 and 4 provide info about the individal sinks. 
+If you're using different modules that change the format of the sink snapshots, the dataHash and dataBytes attribures can be modified to reflect this. 

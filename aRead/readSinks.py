@@ -3,121 +3,64 @@ import numpy as np
 import struct
 import os
 
-# Class to hold the sink attributes
+# Class to hold and read sink attributes
 class readSinks():
-    # Initialisation function
-    def __init__(self, type, filepath, nSnaps=1, sinkMax=1000, dumpMax=5000, simple=False):
-        # Initialise buffer size flag
-        self.bufferSizeError = False
+    def __init__(self):
+        # The types and length of the data in the dumps.
+        # Change this if using a different format or extra variables
+        self.dataHash = "ddddddddddddliiii"
+        self.dataBytes = 120
 
-        # If we're only opening a single file 
-        if type == 1:
-            self.openSinkSnap(filepath)
-        # If we're opening multiple sink particle files
-        elif type == 2:
-            self.readAllSnaps(filepath, nSnaps)
-        # If we're opening the sink evolution files
-        elif type == 3:
-            self.readSinkEvolution(filepath, sinkMax, dumpMax)
-        # If we have multiple sink evolution files to combine
-        elif type== 4:
-            self.readAllEvolution(filepath, sinkMax, dumpMax, simple)
-        else:
-            pass
-
-    # Function to read the sink buffer
-    def readSinkBuffer(self, f):
-        # Looping through each sink to get its data
-        for i in range(self.nSinks):
-            # Reading the doubles in the buffer
-            sinkData = struct.unpack("dddddddddddd", f.read(8 * 12))
-
-            # Positions
-            self.sinkX[i] = sinkData[0]
-            self.sinkY[i] = sinkData[1]
-            self.sinkZ[i] = sinkData[2]
-
-            # Velocites
-            self.sinkVX[i] = sinkData[3]
-            self.sinkVY[i] = sinkData[4]
-            self.sinkVZ[i] = sinkData[5]
-
-            # Accelerations
-            self.sinkAX[i] = sinkData[6]
-            self.sinkAY[i] = sinkData[7]
-            self.sinkAZ[i] = sinkData[8]
-
-            # Masses
-            self.sinkMass[i] = sinkData[9]
-
-            # Formation characteristics
-            self.formationMass[i] = sinkData[10]
-            self.formationTime[i] = sinkData[11]
-
-            # Reading the sink ID
-            sinkData = struct.unpack("l", f.read(8))
-            self.sinkID[i] = sinkData[0]
-
-            # Reading the rest of the dataset
-            sinkData = struct.unpack("iiii", f.read(4* 4))
-
-            self.sinkHomeTask[i] = sinkData[0]
-            self.sinkIndex[i] = sinkData[1]
-            self.formationOrder[i] = sinkData[2]
-
-    # Function to open a sink snapshot file 
+    # Function to open up a singular sink snapshot and assign variables
     def openSinkSnap(self, filepath):
-        # Opening the file
+        # Open the file
         f = open(filepath, "rb")
 
-        # Reading the header information
+        # Get the time and number of sinks
         self.time = struct.unpack("d", f.read(8))[0]
         self.nSinks = struct.unpack("i", f.read(4))[0]
 
-        # Creating arrays to store everything
-        self.sinkX = np.zeros(self.nSinks)
-        self.sinkY = np.zeros(self.nSinks)
-        self.sinkZ = np.zeros(self.nSinks)
+        # Repeat the data stencil for each sink
+        dataHashAll = self.dataHash * self.nSinks
+        dataBytesAll = self.dataBytes * self.nSinks
+        dataHashLength = len(self.dataHash)
 
-        self.sinkVX = np.zeros(self.nSinks)
-        self.sinkVY = np.zeros(self.nSinks)
-        self.sinkVZ = np.zeros(self.nSinks)
+        # Open all the sink data at once
+        sinkData = struct.unpack(dataHashAll, f.read(dataBytesAll))
 
-        self.sinkAX = np.zeros(self.nSinks)
-        self.sinkAY = np.zeros(self.nSinks)
-        self.sinkAZ = np.zeros(self.nSinks)
+        # Assign each value to an array
+        self.sinkX          = sinkData[0::dataHashLength]
+        self.sinkY          = sinkData[1::dataHashLength]
+        self.sinkZ          = sinkData[2::dataHashLength]
+        self.sinkVX         = sinkData[3::dataHashLength]
+        self.sinkVY         = sinkData[4::dataHashLength]
+        self.sinkVZ         = sinkData[5::dataHashLength]
+        self.sinkAX         = sinkData[6::dataHashLength]
+        self.sinkAY         = sinkData[7::dataHashLength]
+        self.sinkAZ         = sinkData[8::dataHashLength]
+        self.sinkMass       = sinkData[9::dataHashLength]
+        self.formationMass  = sinkData[10::dataHashLength]
+        self.formationTime  = sinkData[11::dataHashLength]
+        self.sinkID         = sinkData[12::dataHashLength]
 
-        self.sinkMass = np.zeros(self.nSinks)
-        self.sinkID = np.zeros(self.nSinks)
-
-        self.sinkHomeTask = np.zeros(self.nSinks)
-        self.sinkIndex = np.zeros(self.nSinks)
-
-        self.formationMass = np.zeros(self.nSinks)
-        self.formationTime = np.zeros(self.nSinks)
-        self.formationOrder = np.zeros(self.nSinks)
-
-        # Looping through each sink to get its data
-        self.readSinkBuffer(f)
-
-    # Function to read all the sink files in a given directory
-    def readAllSnaps(self, directory, nSnaps):
+    # Function to read multiple sink snapshots and assign variables
+    def readSinkSnaps(self, filepath, nStart=0, nEnd=100):
         snapPrefix = "sink_snap_"
 
         # Creating arrays to store data
-        self.totSinkMass = np.zeros(nSnaps)
-        self.numSinks = np.zeros(nSnaps)
-        self.snapTime = np.zeros(nSnaps)
+        self.totSinkMass = np.zeros(nEnd-nStart)
+        self.numSinks = np.zeros(nEnd-nStart)
+        self.snapTime = np.zeros(nEnd-nStart)
 
         # Looping through every snap
-        for i in range(nSnaps):
+        for i in range(nStart, nEnd-nStart):
             # Working out what the name of the file will be
             if i <= 9: 
-                filename = directory + snapPrefix + "00" + str(i)
+                filename = filepath + snapPrefix + "00" + str(i)
             elif i <= 99:
-                filename = directory + snapPrefix + "0" + str(i)
+                filename = filepath + snapPrefix + "0" + str(i)
             else:
-                filename = directory + snapPrefix + str(i)
+                filename = filepath + snapPrefix + str(i)
 
             # Opening snap
             self.openSinkSnap(filename)
@@ -127,160 +70,155 @@ class readSinks():
             self.numSinks[i] = self.nSinks
             self.snapTime[i] = self.time
 
-    # Function to read the sink evolution files
-    def readSinkEvolution(self, filepath, sinkMax, dumpMax):
-        # Creating arrays to store sink variables
+    # Function to open up a sink evolution file and assign variables
+    def openSinkEvolution(self, filepath, dumpMax=5000, newSinks=1000, sizeOverride=0):
+        # Open the file initially
+        with open(filepath, "rb") as fInit:
+            # We'll open up the first time and nSinks to tell us how big our arrays should be
+            _ = struct.unpack("d", fInit.read(8))[0]
+            nSinksInit = struct.unpack("i", fInit.read(4))[0]
+
+        # Creating variables to store scalar attributes
         self.time = []
         self.nSinks = []
-        self.sinkX = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.sinkY = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.sinkZ = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.sinkVX = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.sinkVY = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.sinkVZ = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.sinkMass = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.formationMass = np.zeros((dumpMax, sinkMax), dtype=np.float32)
-        self.formationTime = np.zeros((dumpMax, sinkMax), dtype=np.float64)
-        self.sinkID = np.zeros((dumpMax, sinkMax), dtype=np.int64)
-        self.formationOrder = np.zeros((dumpMax, sinkMax), dtype=np.int64)
 
-        # Creating counter variable
-        dumpCount = 0
+        # When using the read all evolution we want to keep arrays all the same length for combining, so need an override 
+        if sizeOverride == 0:
+            sinkSize = nSinksInit + newSinks
+        else:
+            sinkSize = sizeOverride
 
-        # Opening the binary file
+        # Creating variables to store vector attributes (dTypes are to save memory where we can)
+        self.sinkX          = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.sinkY          = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.sinkZ          = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.sinkVX         = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.sinkVY         = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.sinkVZ         = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.sinkMass       = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.formationMass  = np.zeros((dumpMax, sinkSize), dtype=np.float32)
+        self.formationTime  = np.zeros((dumpMax, sinkSize), dtype=np.float64)
+        self.sinkID         = np.zeros((dumpMax, sinkSize), dtype=np.int64)
+
+        # Loop through the file and keep reading until we can't anymore
         with open(filepath, "rb") as f:
-            while dumpCount < dumpMax and not self.bufferSizeError:
+            dumpCount = 0
+
+            while dumpCount < dumpMax:
                 try:
                     # Getting the time and the number of sinks
                     self.time.append(struct.unpack("d", f.read(8))[0])
-                    self.nSinks.append(struct.unpack("i", f.read(4))[0])
+                    self.nSinks.append(struct.unpack("i", f.read(4))[0]) 
+                    nSinksHere = self.nSinks[dumpCount]
 
-                    # Check if we're going to hit the sink limit
-                    if self.nSinks[dumpCount] >= (sinkMax-2):
-                        # Return and error and break
-                        print("Too many sinks, increase sink buffer size")
-                        self.bufferSizeError = True
- 
-                    # Looping through every sink
-                    for i in range(self.nSinks[dumpCount]):
-                        # Reading sink info
-                        sinkData = struct.unpack("dddddddddddd", f.read(8 * 12))
+                    # Repeat the data stencil for each sink
+                    dataHashAll = self.dataHash * nSinksHere
+                    dataBytesAll = self.dataBytes * nSinksHere
+                    dataHashLength = len(self.dataHash)
 
-                        # Storing the sink properties we care about
-                        self.sinkX[dumpCount, i] = sinkData[0]
-                        self.sinkY[dumpCount, i] = sinkData[1]
-                        self.sinkZ[dumpCount, i] = sinkData[2]
-                        self.sinkVX[dumpCount, i] = sinkData[3]
-                        self.sinkVY[dumpCount, i] = sinkData[4]
-                        self.sinkVZ[dumpCount, i] = sinkData[5]
-                        self.sinkMass[dumpCount, i] = sinkData[9]
-                        self.formationMass[dumpCount, i] = sinkData[10]
-                        self.formationTime[dumpCount, i] = sinkData[11]
+                    # Open all the sink data at once
+                    sinkData = struct.unpack(dataHashAll, f.read(dataBytesAll))
 
-                        # Reading the rest of the buffer
-                        sinkData = struct.unpack("l", f.read(8))
-                        self.sinkID[dumpCount, i] = sinkData[0]
+                    # Check we haven't exceeded the max number of sinks we can store
+                    if self.nSinks[dumpCount] >= nSinksInit+999:
+                        # Switching to append mode
+                        raise BufferError("Not enough space for all the sinks.")
 
-                        sinkData = struct.unpack("iiii", f.read(4 * 4))
-                        self.formationOrder[dumpCount, i] = sinkData[2]
+                    # Assign each value to the arrays
+                    self.sinkX[dumpCount, :nSinksHere]          = sinkData[0::dataHashLength]
+                    self.sinkY[dumpCount, :nSinksHere]          = sinkData[1::dataHashLength]
+                    self.sinkZ[dumpCount, :nSinksHere]          = sinkData[2::dataHashLength]
+                    self.sinkVX[dumpCount, :nSinksHere]         = sinkData[3::dataHashLength]
+                    self.sinkVY[dumpCount, :nSinksHere]         = sinkData[4::dataHashLength]
+                    self.sinkVZ[dumpCount, :nSinksHere]         = sinkData[5::dataHashLength]
+                    self.sinkMass[dumpCount, :nSinksHere]       = sinkData[9::dataHashLength]
+                    self.formationMass[dumpCount, :nSinksHere]  = sinkData[10::dataHashLength]
+                    self.formationTime[dumpCount, :nSinksHere]  = sinkData[11::dataHashLength]
+                    self.sinkID[dumpCount, :nSinksHere]         = sinkData[12::dataHashLength]
 
-                    # Counting up the dump counter
-                    dumpCount += 1 
-                except:
+                    # Increase the counter
                     dumpCount += 1
+
+                except:
+                    break
 
         # Re assignning time and nsinks to arrays
         self.time = np.array(self.time)
         self.nSinks = np.array(self.nSinks)
 
-    # Function to read all the evolution files in a directory
-    def readAllEvolution(self, filepath, sinkMax, dumpMax, simple=False):
-        # List the files in this directory
+    # Function to read all the sink evolution files and combine them
+    def readAllEvolution(self, filepath):
+        # Get all the files we need to read and sort them
         allFiles = os.listdir(filepath)
+        allFiles = np.sort(allFiles)
 
-        # Sort the evolution files
-        vals = []
+        # Open the final file and use this to find how big our arrays need to be
+        with open(filepath+allFiles[-1], "rb") as fInit:
+            _ = struct.unpack("d", fInit.read(8))[0]
+            nSinksEnd = struct.unpack("i", fInit.read(4))[0]
+
+        # Loop through each of the files
         for file in allFiles:
-            val = int(file[-2:])
-            vals.append(val)
+            # Open the file using our sink evolution function
+            self.openSinkEvolution(filepath+file, sizeOverride=nSinksEnd+1000)
 
-        inds = np.argsort(vals)
-        allFiles = np.array(allFiles)
-        allFiles = allFiles[inds]
+            # Find how much of the arrays we've filled
+            nDumps = len(self.time[self.time != 0])
 
-        # Loop through each file
-        while not self.bufferSizeError:
-            for file in allFiles:
-                # Open file and extract masses
-                sinkData = self.readSinkEvolution(filepath + file, sinkMax=sinkMax, dumpMax=dumpMax)
-                index = len(self.time[self.time != 0])
-
-                # If first file, make new arrays
-                if file == allFiles[0]:
-                    self.allTime = self.time[:index]
-                    self.allSinks = self.nSinks[:index]
-                    self.allIDs = self.sinkID[:index]
-                    self.allMasses = self.sinkMass[:index]
-                    self.allX = self.sinkX[:index]
-                    self.allY = self.sinkY[:index]
-                    self.allZ = self.sinkZ[:index]
-
-                    # Load more complex values 
-                    if not simple:
-                        self.allOrders = self.formationOrder[:index]
-                        self.allFormationTimes = self.formationTime[:index]
-                        self.allFormationMass = self.formationMass[:index]
-                        self.allVX = self.sinkVX[:index]
-                        self.allVY = self.sinkVY[:index]
-                        self.allVZ = self.sinkVZ[:index]
-
-                # Otherwise, add to existing
+            # Assign these values to arrays
+            if file == allFiles[0]:
+                # We create new arrays for the first file as they don't exist yet
+                self.allTime            = self.time[:nDumps]
+                self.allSinks           = self.nSinks[:nDumps]
+                self.allX               = self.sinkX[:nDumps]
+                self.allY               = self.sinkY[:nDumps]
+                self.allZ               = self.sinkZ[:nDumps]
+                self.allVX              = self.sinkVX[:nDumps]
+                self.allVY              = self.sinkVY[:nDumps]
+                self.allVZ              = self.sinkVZ[:nDumps]
+                self.allIDs             = self.sinkID[:nDumps]
+                self.allMasses          = self.sinkMass[:nDumps]
+                self.allFormationTimes  = self.formationTime[:nDumps]
+                self.allFormationMass   = self.formationMass[:nDumps]
+            else:
+                # Otherwise we simply add to the existing ones
+                if len(self.time) == 0:
+                    # Sometimes the evolution file is empty
+                    pass
                 else:
-                    if len(self.time) == 0:
-                        pass
+                    # We need to account for the files overlapping, like if we start from a snapshot file instead of restart file
+                    newStart = self.time[0]
+
+                    if newStart < self.allTime[-1]:
+                        # Find where the new array fits into the old one
+                        startIndex = np.where(self.allTime > newStart)[0][0]
                     else:
-                        # Find where this new file starts
-                        newStart = self.time[0]
+                        startIndex = -1
 
-                        if newStart < self.allTime[-1]:
-                            # Find where we got to this time
-                            startIndex = np.where(self.allTime > newStart)
-                            startIndex = startIndex[0][0]
-                        else:
-                            startIndex = -1
+                # Now join everything together
+                self.allTime            = np.concatenate((self.allTime[:startIndex], self.time[:nDumps]))
+                self.allSinks           = np.concatenate((self.allSinks[:startIndex], self.nSinks[:nDumps]))
+                self.allX               = np.concatenate((self.allX[:startIndex], self.sinkX[:nDumps]))
+                self.allY               = np.concatenate((self.allY[:startIndex], self.sinkY[:nDumps]))
+                self.allZ               = np.concatenate((self.allZ[:startIndex], self.sinkZ[:nDumps]))
+                self.allVX              = np.concatenate((self.allVX[:startIndex], self.sinkVX[:nDumps]))
+                self.allVY              = np.concatenate((self.allVY[:startIndex], self.sinkVZ[:nDumps]))
+                self.allVZ              = np.concatenate((self.allVZ[:startIndex], self.sinkVZ[:nDumps]))
+                self.allIDs             = np.concatenate((self.allIDs[:startIndex], self.sinkID[:nDumps]))
+                self.allMasses          = np.concatenate((self.allMasses[:startIndex], self.sinkMass[:nDumps]))
+                self.allFormationTimes  = np.concatenate((self.allFormationTimes[:startIndex], self.formationTime[:nDumps]))
+                self.allFormationMass   = np.concatenate((self.allFormationMass[:startIndex], self.formationMass[:nDumps]))
 
-                        self.allTime = np.concatenate((self.allTime[:startIndex], self.time[:index]))
-                        self.allSinks = np.concatenate((self.allSinks[:startIndex], self.nSinks[:index]))
-                        self.allIDs = np.concatenate((self.allIDs[:startIndex], self.sinkID[:index]))
-                        self.allMasses = np.concatenate((self.allMasses[:startIndex], self.sinkMass[:index]))
-                        self.allX = np.concatenate((self.allX[:startIndex], self.sinkX[:index]))
-                        self.allY = np.concatenate((self.allY[:startIndex], self.sinkY[:index]))
-                        self.allZ = np.concatenate((self.allZ[:startIndex], self.sinkZ[:index]))
-
-                        if not simple:
-                            self.allOrders = np.concatenate((self.allOrders[:startIndex], self.formationOrder[:index]))
-                            self.allFormationTimes = np.concatenate((self.allFormationTimes[:startIndex], self.formationTime[:index]))
-                            self.allFormationMass = np.concatenate((self.allFormationMass[:startIndex], self.formationMass[:index]))
-                            self.allVX = np.concatenate((self.allVX[:startIndex], self.sinkVX[:index]))
-                            self.allVY = np.concatenate((self.allVY[:startIndex], self.sinkVZ[:index]))
-                            self.allVZ = np.concatenate((self.allVZ[:startIndex], self.sinkVZ[:index]))
-
-            # End the while loop
-            self.bufferSizeError = True
-
-        # Re assign data
+        # Re-assign to the normal array names
         self.time = self.allTime
         self.nSinks = self.allSinks
-        self.sinkID = self.allIDs
-        self.sinkMass = self.allMasses
         self.sinkX = self.allX
         self.sinkY = self.allY
         self.sinkZ = self.allZ
-
-        if not simple:
-            self.formationOrder = self.allOrders
-            self.formationTime = self.allFormationTimes
-            self.formationMass = self.allFormationMass
-            self.sinkVX = self.allVX
-            self.sinkVY = self.allVY
-            self.sinkVZ = self.allVZ
+        self.sinkVX = self.allVX
+        self.sinkVY = self.allVY
+        self.sinkVZ = self.allVZ
+        self.sinkID = self.allIDs
+        self.sinkMass = self.allMasses
+        self.formationTime = self.allFormationTimes
+        self.formationMass = self.allFormationMass

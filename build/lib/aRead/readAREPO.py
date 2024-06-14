@@ -10,16 +10,20 @@ kB =  1.38e-16   # cgs unit
 
 # Function to open arepo data 
 class readAREPO():
-    def __init__(self, filename, attrsType=0, chemistry=False, rates=False):
+    def __init__(self, filename, attrsType=0, chemistry=False):
+        # A basic set of attributes for getting quick glance information about the snapshot
         if attrsType == 0:
-            # Define basic set of attributes to read
-            readList = ["Coordinates", "Masses", "Velocities", "Density", "ChemicalAbundances"]
+            readList = ["Coordinates", "Masses", "Velocities", "Density", "ChemicalAbundances", "InternalEnergy"]
+        # We can give the function a list of only the attributes we want to read
+        elif type(attrsType) is list:
+            readList = attrsType
+        # Read every attribute in the file
         else:
-            # Read everything
             readList = []
 
         # Loading in hdf5 file and assigninig data
         self.dataDict = self.snapshotRead(filename, readList)
+        isRealSnapshot = 0
 
         for i in range(len(self.snapshotAttributes)):
             # Assign the positions
@@ -53,12 +57,14 @@ class readAREPO():
             if self.snapshotAttributes[i] == "Density":
                 self.rho = self.dataDict["Density"]
                 self.numberDensity = self.rho / (1.4 * mProt)
+                isRealSnapshot += 1
 
             if self.snapshotAttributes[i] == "Masses":
                 self.mass = self.dataDict["Masses"] 
 
             if self.snapshotAttributes[i] == "InternalEnergy":
                 self.u = self.dataDict["InternalEnergy"]
+                isRealSnapshot += 1
 
             if self.snapshotAttributes[i] == "ParticleIDs":
                 self.ids = self.dataDict["ParticleIDs"]
@@ -68,6 +74,8 @@ class readAREPO():
 
             if self.snapshotAttributes[i] == "ChemicalAbundances":
                 self.chem = self.dataDict["ChemicalAbundances"]
+                isRealSnapshot += 1
+                # We don't always want to assign all this memory
                 if chemistry:
                     self.extractChemistry()
 
@@ -84,16 +92,15 @@ class readAREPO():
                 self.rates = self.dataDict["SGCHEM_HeatCoolRates"]
                 self.extractRates()
 
-        # Using proxy for not an IC snap 
-        # TODO: Fix
-        if len(self.snapshotAttributes) > 7:
+        # Only calculate gas temperature if we have the values for it
+        if isRealSnapshot == 3:
             # Calculating the temperature of the gas
             yn = self.rho / ((1 + 4 * 0.1) * mProt)
             ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
             energy = self.u * self.rho
             self.gasTemp = 2 * energy  / (3 * ynTot * kB)
 
-    # Function to extract all the chemistry information and assign to variables
+    # Function to extract all the chemistry information and assign it to variables
     def extractChemistry(self, totC=1.4e-4, totO=3.2e-4):
         # Getting the different abundances from the chemistry data
         self.H2 = self.chem[:,0]
@@ -121,8 +128,8 @@ class readAREPO():
         self.bremsstrahlung = self.rates[:,5]       # Thermal bremsstrahlung
         self.cosmicRays = self.rates[:,6]           # Cosmic Ray Heating
         self.photoElectric = self.rates[:,7]        # Photoelectric heating
-        self.OIfineStruc = self.rates[:,8]          # O Fine structure cooling
-        self.CIIfineStruc = self.rates[:,9]         # C+ Fine structure cooling
+        self.OfineStruc = self.rates[:,8]           # O Fine structure cooling
+        self.CplusFineStruc = self.rates[:,9]       # C+ Fine structure cooling
         self.dustRecomb = self.rates[:,10]          # Dust recombination cooling
         self.highTfineStruc = self.rates[:,11]      # High temperature fine structure cooling (multiple)
         self.H2dissCollisional = self.rates[:,12]   # H2 Collisional Dissassociation
@@ -130,9 +137,9 @@ class readAREPO():
         self.UVpump = self.rates[:,14]              # UV Pumping of H2
         self.H2form = self.rates[:,15]              # H2 Formation Heating
         self.H2ionCollisional = self.rates[:,16]    # H2 Collisional Ionization
-        self.HIIIrecomb = self.rates[:,17]          # H+ Recombination Cooling 
+        self.HplusRecomb = self.rates[:,17]         # H+ Recombination Cooling 
         self.COcool = self.rates[:,18] + self.rates[:,19] + self.rates[:,20] # CO cooling (multiple isotopes)
-        self.CIfineStruc = self.rates[:,21]         # C Fine structure cooling
+        self.CfineStruc = self.rates[:,21]          # C Fine structure cooling
 
     # Function to read the header atrributes
     def readHeader(self, snapshotFile):
