@@ -237,4 +237,4 @@ class readSinks():
         self.sinkMass       = self.allMasses
         self.formationTime  = self.allFormationTimes
         self.formationMass  = self.allFormationMass
-        self.formationOrder = self.formationOrder
+        self.formationOrder = self.allFormationOrder
