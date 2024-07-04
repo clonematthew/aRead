@@ -10,7 +10,7 @@ kB =  1.38e-16   # cgs unit
 
 # Function to open arepo data 
 class readAREPO():
-    def __init__(self, filename, attrsType=0, chemistry=False):
+    def __init__(self, filename, attrsType=0, chemistry=False, tracers=False):
         # A basic set of attributes for getting quick glance information about the snapshot
         if attrsType == 0:
             readList = ["Coordinates", "Masses", "Velocities", "Density", "ChemicalAbundances", "InternalEnergy"]
@@ -22,7 +22,7 @@ class readAREPO():
             readList = []
 
         # Loading in hdf5 file and assigninig data
-        self.dataDict = self.snapshotRead(filename, readList)
+        self.dataDict = self.snapshotRead(filename, readList, tracers)
         isRealSnapshot = 0
 
         for i in range(len(self.snapshotAttributes)):
@@ -201,7 +201,7 @@ class readAREPO():
         return sinkDict
     
     # Read snapshot file (Part Type 0)
-    def snapshotRead(self, filename, readList):
+    def snapshotRead(self, filename, readList, tracers):
         # Read the snapshot with h5py
         snapshotFile = h5py.File(filename, "r")
 
@@ -232,6 +232,12 @@ class readAREPO():
                     dataDict[att] = dat
                 else:
                     dataDict[att] = np.multiply(dat, cgs)
+
+        # Load in tracer data if required
+        if tracers:
+            tracerData = snapshotFile["PartType3"]
+            self.tracerParentIDs = tracerData["ParentID"][:]
+            self.tracerIDs = tracerData["TracerID"][:]
 
         return dataDict
     
