@@ -10,7 +10,7 @@ kB =  1.38e-16   # cgs unit
 
 # Function to open arepo data 
 class readAREPO():
-    def __init__(self, filename, attrsType=0, chemistry=False, tracers=False):
+    def __init__(self, filename, attrsType=0, chemistry=False, tracers=False, zoomTracers=False):
         # A basic set of attributes for getting quick glance information about the snapshot
         if attrsType == 0:
             readList = ["Coordinates", "Masses", "Velocities", "Density", "ChemicalAbundances", "InternalEnergy"]
@@ -22,7 +22,7 @@ class readAREPO():
             readList = []
 
         # Loading in hdf5 file and assigninig data
-        self.dataDict = self.snapshotRead(filename, readList, tracers)
+        self.dataDict = self.snapshotRead(filename, readList, tracers, zoomTracers)
         isRealSnapshot = 0
 
         for i in range(len(self.snapshotAttributes)):
@@ -152,6 +152,8 @@ class readAREPO():
         self.numPartTotal = header.attrs.get("NumPart_Total")
 
         self.nParticles = self.numPartTotal[0]
+        self.nZoomTracers = self.numPartTotal[1]
+        self.nTracers = self.numPartTotal[4]
         self.nSinks = self.numPartTotal[5]
 
         # Only reading sink particle data if we have sinks
@@ -201,7 +203,7 @@ class readAREPO():
         return sinkDict
     
     # Read snapshot file (Part Type 0)
-    def snapshotRead(self, filename, readList, tracers):
+    def snapshotRead(self, filename, readList, tracers, zoomTracers):
         # Read the snapshot with h5py
         snapshotFile = h5py.File(filename, "r")
 
@@ -238,6 +240,18 @@ class readAREPO():
             tracerData = snapshotFile["PartType3"]
             self.tracerParentIDs = tracerData["ParentID"][:]
             self.tracerIDs = tracerData["TracerID"][:]
+            
+        # Load in zoom tracer data if required
+        if zoomTracers:
+            zoomTracerData = snapshotFile["PartType1"]
+            self.tids = zoomTracerData["ParticleIDs"][:]
+
+            coords = zoomTracerData["Coordinates"][:]
+            splitPos = np.array_split(coords, 3, axis=1)
+
+            self.tx = splitPos[0].reshape(self.nZoomTracers)
+            self.ty = splitPos[1].reshape(self.nZoomTracers)
+            self.tz = splitPos[2].reshape(self.nZoomTracers)      
 
         return dataDict
     
