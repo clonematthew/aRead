@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="aRead",
-    version="0.29",
+    version="0.30",
     author="Matt Cusack",
     author_email="cusackmt@cardiff.ac.uk",
     description="Package for opening AREPO snapshot files",

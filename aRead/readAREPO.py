@@ -247,13 +247,11 @@ class readAREPO():
             self.tids = zoomTracerData["ParticleIDs"][:]
 
             coords = zoomTracerData["Coordinates"][:]
-            cgs = zoomTracerData["Coordinates"].attrs.get("to_cgs")
-            coords = np.multiply(coords, cgs)
             splitPos = np.array_split(coords, 3, axis=1)
 
-            self.tx = splitPos[0].reshape(self.nZoomTracers)
-            self.ty = splitPos[1].reshape(self.nZoomTracers)
-            self.tz = splitPos[2].reshape(self.nZoomTracers)      
+            self.tx = splitPos[0].reshape(self.nZoomTracers) * 1e17
+            self.ty = splitPos[1].reshape(self.nZoomTracers) * 1e17
+            self.tz = splitPos[2].reshape(self.nZoomTracers) * 1e17
 
         return dataDict
     
