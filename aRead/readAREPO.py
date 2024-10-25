@@ -259,9 +259,6 @@ class readAREPO():
             self.tvx = splitVel[0].reshape(self.nZoomTracers) * 36447.2682
             self.tvy = splitVel[1].reshape(self.nZoomTracers) * 36447.2682
             self.tvz = splitVel[2].reshape(self.nZoomTracers) * 36447.2682
-            
-            mass = zoomTracerData["Masses"][:]
-            self.tmass = mass * 1.991e33
 
         return dataDict
     
