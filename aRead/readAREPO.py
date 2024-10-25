@@ -252,6 +252,16 @@ class readAREPO():
             self.tx = splitPos[0].reshape(self.nZoomTracers) * 1e17
             self.ty = splitPos[1].reshape(self.nZoomTracers) * 1e17
             self.tz = splitPos[2].reshape(self.nZoomTracers) * 1e17
+            
+            vels = zoomTracerData["Velocities"][:]
+            splitVel = np.array_split(vels, 3, axis=1)
+            
+            self.tvx = splitVel[0].reshape(self.nZoomTracers) * 36447.2682
+            self.tvy = splitVel[1].reshape(self.nZoomTracers) * 36447.2682
+            self.tvz = splitVel[2].reshape(self.nZoomTracers) * 36447.2682
+            
+            mass = zoomTracerData["Masses"][:]
+            self.tmass = mass * 1.991e33
 
         return dataDict
     
