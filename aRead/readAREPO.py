@@ -91,6 +91,9 @@ class readAREPO():
             if self.snapshotAttributes[i] == "SGCHEM_HeatCoolRates":
                 self.rates = self.dataDict["SGCHEM_HeatCoolRates"]
                 self.extractRates()
+                
+            if self.snapshotAttributes[i] == "Gamma":
+                self.gamma = self.dataDict["Gamma"]
 
         # Only calculate gas temperature if we have the values for it
         if isRealSnapshot == 3:
