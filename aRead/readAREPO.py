@@ -176,7 +176,7 @@ class readAREPO():
             self.sinkVZ = splitSinkVel[2].reshape(self.nSinks)
             
             # Splitting and storing accelerations
-            splitSinkAcc = np.array_split(sinkDisc["Acceleration"], 3, axis=1)
+            splitSinkAcc = np.array_split(sinkDict["Acceleration"], 3, axis=1)
             self.sinkAX = splitSinkAcc[0].reshape(self.nSinks)
             self.sinkAY = splitSinkAcc[1].reshape(self.nSinks)
             self.sinkAZ = splitSinkAcc[2].reshape(self.nSinks)
@@ -202,11 +202,11 @@ class readAREPO():
             # Extracting attribute
             dat = sinkData[att][:]
 
-            if att == "ParticleIDs":
+            # Apply conversion factors if there is one
+            cgs = sinkData[att].attrs.get("to_cgs")
+            if cgs == None or cgs == 0.0:
                 sinkDict[att] = dat
             else:
-                # Converting
-                cgs = sinkData[att].attrs.get("to_cgs")
                 sinkDict[att] = np.multiply(dat, cgs)
 
         return sinkDict
