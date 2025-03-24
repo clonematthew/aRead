@@ -174,6 +174,12 @@ class readAREPO():
             self.sinkVX = splitSinkVel[0].reshape(self.nSinks)
             self.sinkVY = splitSinkVel[1].reshape(self.nSinks)
             self.sinkVZ = splitSinkVel[2].reshape(self.nSinks)
+            
+            # Splitting and storing accelerations
+            splitSinkAcc = np.array_split(sinkDisc["Acceleration"], 3, axis=1)
+            self.sinkAX = splitSinkAcc[0].reshape(self.nSinks)
+            self.sinkAY = splitSinkAcc[1].reshape(self.nSinks)
+            self.sinkAZ = splitSinkAcc[2].reshape(self.nSinks)
 
             # Storing masses and potentials
             self.sinkMass = sinkDict["Masses"]
@@ -189,7 +195,7 @@ class readAREPO():
         sinkDict = {}
 
         # List of attributes to read
-        attrs = ["Coordinates", "Masses", "Velocities", "Potential", "ParticleIDs"]
+        attrs = ["Coordinates", "Masses", "Velocities", "Potential", "ParticleIDs", "Acceleration"]
 
         # Looping through each attribute
         for att in attrs:
