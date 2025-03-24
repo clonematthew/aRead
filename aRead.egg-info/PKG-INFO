@@ -1,11 +1,16 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: aRead
-Version: 0.33
+Version: 0.35
 Summary: Package for opening AREPO snapshot files
 Author: Matt Cusack
 Author-email: cusackmt@cardiff.ac.uk
 Description-Content-Type: text/markdown
 License-File: LICENSE.txt
+Dynamic: author
+Dynamic: author-email
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: summary
 
 ### aRead - A package for opening AREPO Snapshot Files
 
