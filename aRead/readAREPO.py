@@ -102,6 +102,9 @@ class readAREPO():
             ynTot = (1 + 0.1 - self.chem[:,0] + self.chem[:,1]) * yn
             energy = self.u * self.rho
             self.gasTemp = 2 * energy  / (3 * ynTot * kB)
+            
+        # Close the snapshot file mow everything is assigned
+        self.snapshotFile.close()
 
     # Function to extract all the chemistry information and assign it to variables
     def extractChemistry(self, totC=1.4e-4, totO=3.2e-4):
@@ -187,9 +190,9 @@ class readAREPO():
             self.sinkID = sinkDict["ParticleIDs"]
 
     # Function to read the sink data stored in the snapshot files
-    def readSinks(self, snapshotFile):
+    def readSinks(self):
         # Loading sink particles
-        sinkData = snapshotFile["PartType5"]
+        sinkData = self.snapshotFile["PartType5"]
 
         # Setting up sink particle dict
         sinkDict = {}
@@ -214,14 +217,14 @@ class readAREPO():
     # Read snapshot file (Part Type 0)
     def snapshotRead(self, filename, readList, tracers, zoomTracers):
         # Read the snapshot with h5py
-        snapshotFile = h5py.File(filename, "r")
+        self.snapshotFile = h5py.File(filename, "r")
 
         # Read the header information
-        self.readHeader(snapshotFile)
+        self.readHeader()
 
         # Set up data dict and get kets
         dataDict = {}
-        data = snapshotFile["PartType0"]
+        data = self.snapshotFile["PartType0"]
         attrs = list(data.keys())            
         self.snapshotAttributes = attrs
 
@@ -246,13 +249,13 @@ class readAREPO():
 
         # Load in tracer data if required
         if tracers:
-            tracerData = snapshotFile["PartType3"]
+            tracerData = self.snapshotFile["PartType3"]
             self.tracerParentIDs = tracerData["ParentID"][:]
             self.tracerIDs = tracerData["TracerID"][:]
             
         # Load in zoom tracer data if required
         if zoomTracers:
-            zoomTracerData = snapshotFile["PartType1"]
+            zoomTracerData = self.snapshotFile["PartType1"]
             self.tids = zoomTracerData["ParticleIDs"][:]
 
             coords = zoomTracerData["Coordinates"][:]
