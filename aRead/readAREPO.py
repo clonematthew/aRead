@@ -148,9 +148,9 @@ class readAREPO():
         self.CfineStruc = self.rates[:,21]          # C Fine structure cooling
 
     # Function to read the header atrributes
-    def readHeader(self, snapshotFile):
+    def readHeader(self):
         # Getting the header
-        header = snapshotFile["Header"]
+        header = self.snapshotFile["Header"]
 
         # Loading the attributes we want
         self.boxSize = header.attrs.get("BoxSize")
@@ -164,7 +164,7 @@ class readAREPO():
 
         # Only reading sink particle data if we have sinks
         if self.nSinks > 0:
-            sinkDict = self.readSinks(snapshotFile)
+            sinkDict = self.readSinks(self.snapshotFile)
 
             # Splitting and storing coordinates
             splitSinkPos = np.array_split(sinkDict["Coordinates"], 3, axis=1)
