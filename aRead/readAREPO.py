@@ -164,7 +164,7 @@ class readAREPO():
 
         # Only reading sink particle data if we have sinks
         if self.nSinks > 0:
-            sinkDict = self.readSinks(self.snapshotFile)
+            sinkDict = self.readSinks()
 
             # Splitting and storing coordinates
             splitSinkPos = np.array_split(sinkDict["Coordinates"], 3, axis=1)
