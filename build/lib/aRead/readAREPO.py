@@ -1,3 +1,15 @@
+'''
+                             __       _       _______     ________  _______     ___     
+                            |  ]     / \     |_   __ \   |_   __  ||_   __ \  .'   `.   
+ _ .--.  .---.  ,--.    .--.| |     / _ \      | |__) |    | |_ \_|  | |__) |/  .-.  \  
+[ `/'`\]/ /__\\`'_\ : / /'`\' |    / ___ \     |  __ /     |  _| _   |  ___/ | |   | |  
+ | |    | \__.,// | |,| \__/  |  _/ /   \ \_  _| |  \ \_  _| |__/ | _| |_    \  `-'  /  
+[___]    '.__.'\'-;__/ '.__.;__]|____| |____||____| |___||________||_____|    `.___.'   
+                                                                                        
+    readAREPO: Function to read .hdf5 files produced by the AREPO code. Written by 
+               Matt Cusack, 2024-5. 
+'''
+
 # Importing libraries
 import numpy as np
 import matplotlib.pyplot as plt
@@ -166,42 +178,50 @@ class readAREPO():
         if self.nSinks > 0:
             sinkDict = self.readSinks()
 
-            # Splitting and storing coordinates
-            splitSinkPos = np.array_split(sinkDict["Coordinates"], 3, axis=1)
-            self.sinkX = splitSinkPos[0].reshape(self.nSinks)
-            self.sinkY = splitSinkPos[1].reshape(self.nSinks) 
-            self.sinkZ = splitSinkPos[2].reshape(self.nSinks)
-
-            # Splitting and storing velocities
-            splitSinkVel = np.array_split(sinkDict["Velocities"], 3, axis=1)
-            self.sinkVX = splitSinkVel[0].reshape(self.nSinks)
-            self.sinkVY = splitSinkVel[1].reshape(self.nSinks)
-            self.sinkVZ = splitSinkVel[2].reshape(self.nSinks)
-            
-            # Splitting and storing accelerations
-            splitSinkAcc = np.array_split(sinkDict["Acceleration"], 3, axis=1)
-            self.sinkAX = splitSinkAcc[0].reshape(self.nSinks)
-            self.sinkAY = splitSinkAcc[1].reshape(self.nSinks)
-            self.sinkAZ = splitSinkAcc[2].reshape(self.nSinks)
-
-            # Storing masses and potentials
-            self.sinkMass = sinkDict["Masses"]
-            self.sinkPotential = sinkDict["Potential"]
-            self.sinkID = sinkDict["ParticleIDs"]
+            # Loop through the list of sink attributes and assign to variables
+            for i in range(len(self.sinkAttributes)):
+                if self.sinkAttributes[i] == "Coordinates":
+                    # Splitting and storing coordinates
+                    splitSinkPos = np.array_split(sinkDict["Coordinates"], 3, axis=1)
+                    self.sinkX = splitSinkPos[0].reshape(self.nSinks)
+                    self.sinkY = splitSinkPos[1].reshape(self.nSinks) 
+                    self.sinkZ = splitSinkPos[2].reshape(self.nSinks)
+                    
+                elif self.sinkAttributes[i] == "Velocities":
+                    # Splitting and storing velocities
+                    splitSinkVel = np.array_split(sinkDict["Velocities"], 3, axis=1)
+                    self.sinkVX = splitSinkVel[0].reshape(self.nSinks)
+                    self.sinkVY = splitSinkVel[1].reshape(self.nSinks)
+                    self.sinkVZ = splitSinkVel[2].reshape(self.nSinks)
+                    
+                elif self.sinkAttributes[i] == "Acceleration":
+                    # Splitting and storing accelerations
+                    splitSinkAcc = np.array_split(sinkDict["Acceleration"], 3, axis=1)
+                    self.sinkAX = splitSinkAcc[0].reshape(self.nSinks)
+                    self.sinkAY = splitSinkAcc[1].reshape(self.nSinks)
+                    self.sinkAZ = splitSinkAcc[2].reshape(self.nSinks)
+                    
+                elif self.sinkAttributes[i] == "Masses":
+                    self.sinkMass = sinkDict["Masses"]
+                    
+                elif self.sinkAttributes[i] == "Potential":
+                    self.sinkPotential = sinkDict["Potential"]
+                    
+                elif self.sinkAttributes[i] == "ParticleIDs":
+                    self.sinkID = sinkDict["ParticleIDs"]
 
     # Function to read the sink data stored in the snapshot files
     def readSinks(self):
-        # Loading sink particles
+        # Loading sink particles and setup dict
         sinkData = self.snapshotFile["PartType5"]
-
-        # Setting up sink particle dict
         sinkDict = {}
-
-        # List of attributes to read
-        attrs = ["Coordinates", "Masses", "Velocities", "Potential", "ParticleIDs", "Acceleration"]
-
+        
+        # Get the list of attributes to read
+        sinkAttrs = list(sinkData.keys())
+        self.sinkAttributes = sinkAttrs
+        
         # Looping through each attribute
-        for att in attrs:
+        for att in self.sinkAttributes:
             # Extracting attribute
             dat = sinkData[att][:]
 

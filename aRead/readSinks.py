@@ -1,3 +1,15 @@
+'''
+██████  ███████  █████  ██████  ███████ ██ ███    ██ ██   ██ ███████ 
+██   ██ ██      ██   ██ ██   ██ ██      ██ ████   ██ ██  ██  ██      
+██████  █████   ███████ ██   ██ ███████ ██ ██ ██  ██ █████   ███████ 
+██   ██ ██      ██   ██ ██   ██      ██ ██ ██  ██ ██ ██  ██       ██ 
+██   ██ ███████ ██   ██ ██████  ███████ ██ ██   ████ ██   ██ ███████ 
+                                                                     
+    readSinks: Functions to read the sink snapshot files produced by
+               the sink particle algorithm in AREPO. Written by Matt
+               Cusack, 2024-5.                                                                  
+'''
+
 # Importing libraries
 import numpy as np
 import struct
