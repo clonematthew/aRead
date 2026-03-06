@@ -487,7 +487,7 @@ class readAREPO():
         self.rCOM = np.sqrt((self.x - self.comX)**2 + (self.y - self.comY)**2 + (self.z - self.comZ)**2)
 
     # Plot the fractional heating and cooling rates
-    def plotHealCoolRates(self, nBins=100, normalised=False):
+    def plotHeatCoolRates(self, nBins=100, normalised=False):
         # Create bins 
         rates = np.zeros((nBins, np.shape(self.rates)[1]+1))
         densityBins = 10**np.linspace(np.log10(np.min(self.numberDensity))+0.0001, np.log10(np.max(self.numberDensity))-0.0001, nBins+1)
@@ -511,8 +511,8 @@ class readAREPO():
                 rates[i] = rates[i] / np.sum(rates[i])    
 
         # Plot the data
-        labels = ["Gas Grain", "pdV Work", "$\\rm H_2$ Formation", "$\\rm H_2$ Dissociation", "Cosmic Rays", "Photoelectric",  "Bremsstrahlung", "O Cooling", "H+ Recombination", "$\\rm H_2$ Cooling", "C+ Cooling", "C Cooling", "CO Cooling", "Atomic Cooling", "High T Fine Structure", "Collisional Ionization", "Lyman-$\\rm \\alpha$ Cooling", "Dust Recombination"]
-        colours = ["green", "lightgreen", "gold", "darkorange", "orange", "red", "darkred", "lightblue",  "cornflowerblue", "royalblue", "blue", "mediumblue", "darkblue", "slateblue", "mediumpurple", "purple", "gray", "black"]
-        ratArr = [rates[:,0], rates[:,-1], rates[:,15], (rates[:,12]+rates[:,13]), rates[:,6], rates[:,7], rates[:,5], rates[:,8], rates[:,17], rates[:,1], rates[:,9], rates[:,-2], (rates[:,18]+rates[:,19]+rates[:,20]), rates[:,2],  rates[:,11], rates[:,16], rates[:,3], rates[:,10]]
-           
+        labels =  ["Gas Grain", "pdV Work",   "$\\rm H_2$ Formation", "$\\rm H_2$ Dissociation", "UV Pumping", "Cosmic Rays", "Photoelectric",  "Bremsstrahlung", "O Cooling", "H+ Recombination", "$\\rm H_2$ Cooling", "C+ Cooling", "C Cooling",  "CO Cooling",                          "Atomic Cooling", "High T Fine Structure", "Collisional Ionization", "Lyman-$\\rm \\alpha$ Cooling", "Dust Recombination"]
+        colours = ["green",     "lightgreen", "gold",                 "darkorange",              "darkviolet", "orange",      "red",            "darkred",        "lightblue", "cornflowerblue",   "royalblue",          "blue",       "mediumblue", "darkblue",                            "slateblue",      "mediumpurple",          "purple",                 "gray",                         "black"]
+        ratArr =  [rates[:,0],  rates[:,-1],  rates[:,15],            (rates[:,12]+rates[:,13]), rates[:,14],  rates[:,6],    rates[:,7],       rates[:,5],       rates[:,8],  rates[:,17],        rates[:,1],           rates[:,9],   rates[:,-2],  (rates[:,18]+rates[:,19]+rates[:,20]), rates[:,2],       rates[:,11],             rates[:,16],              rates[:,3],                     rates[:,10]]
+
         return (densityBins[1:]+densityBins[:-1])/2, ratArr, labels, colours
