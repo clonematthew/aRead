@@ -505,14 +505,14 @@ class readAREPO():
                     rates[i,j] = np.abs(np.median(self.rates[:,j][inBin]))
     
                 # Add in the pdV work term
-                rates[i,np.shape(self.rates)[1]] = abs(np.median((5/3 - 1) * self.velocityDivergence[inBin] * (36447.2682 / 1e17) * self.rho[inBin] * self.u[inBin]))
+                rates[i,-1] = abs(np.median((5/3 - 1) * self.velocityDivergence[inBin] * (36447.2682 / 1e17) * self.rho[inBin] * self.u[inBin]))
 
             if normalised:
                 rates[i] = rates[i] / np.sum(rates[i])    
 
         # Plot the data
-        labels =  ["Gas Grain", "pdV Work",   "$\\rm H_2$ Formation", "$\\rm H_2$ Dissociation", "UV Pumping", "Cosmic Rays", "Photoelectric",  "Bremsstrahlung", "O Cooling", "H+ Recombination", "$\\rm H_2$ Cooling", "C+ Cooling", "C Cooling",  "CO Cooling",                          "Atomic Cooling", "High T Fine Structure", "Collisional Ionization", "Lyman-$\\rm \\alpha$ Cooling", "Dust Recombination"]
-        colours = ["green",     "lightgreen", "gold",                 "darkorange",              "darkviolet", "orange",      "red",            "darkred",        "lightblue", "cornflowerblue",   "royalblue",          "blue",       "mediumblue", "darkblue",                            "slateblue",      "mediumpurple",          "purple",                 "gray",                         "black"]
-        ratArr =  [rates[:,0],  rates[:,-1],  rates[:,15],            (rates[:,12]+rates[:,13]), rates[:,14],  rates[:,6],    rates[:,7],       rates[:,5],       rates[:,8],  rates[:,17],        rates[:,1],           rates[:,9],   rates[:,-2],  (rates[:,18]+rates[:,19]+rates[:,20]), rates[:,2],       rates[:,11],             rates[:,16],              rates[:,3],                     rates[:,10]]
+        labels =  ["Gas Grain", "pdV Work",   "$\\rm H_2$ Formation", "$\\rm H_2$ Diss Heating", "Cosmic Rays", "Photoelectric",  "Bremsstrahlung", "O Cooling", "$\\rm H_2$ Diss Cooling$", "H+ Recombination", "$\\rm H_2$ Cooling", "C+ Cooling", "C Cooling",  "CO Cooling",                          "Atomic Cooling", "High T Fine Structure", "Collisional Ionization", "UV Pumping", "Lyman-$\\rm \\alpha$ Cooling", "Dust Recombination"]
+        colours = ["green",     "lightgreen", "gold",                 "wheat",                   "orange",      "red",            "darkred",        "lightblue", "mediumaquamarine",         "cornflowerblue",   "royalblue",          "blue",       "mediumblue", "darkblue",                            "slateblue",      "mediumpurple",          "purple",                 "darkviolet", "gray",                         "black"]
+        ratArr =  [rates[:,0],  rates[:,-1],  rates[:,15],            rates[:,12],               rates[:,6],    rates[:,7],       rates[:,5],       rates[:,8],  rates[:,13],                 rates[:,17],       rates[:,1],           rates[:,9],   rates[:,21],  (rates[:,18]+rates[:,19]+rates[:,20]), rates[:,2],       rates[:,11],             rates[:,16],              rates[:,14],  rates[:,3],                     rates[:,10]]
 
-        return (densityBins[1:]+densityBins[:-1])/2, ratArr, labels, colours
+        return (densityBins[1:]+densityBins[:-1])/2, ratArr, labels, colours, rates
